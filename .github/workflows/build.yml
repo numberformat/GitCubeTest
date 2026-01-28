@@ -30,18 +30,36 @@ jobs:
         run: |
           mkdir -p site
           cp docs/index.html site/
+          cp .nojekyll site/
 
-      - name: Render STL
+      - name: Render STLs
         run: |
-          openscad -o site/cube.stl cube.scad
+          shopt -s nullglob
+          scad_files=( *.scad )
+          if [ ${#scad_files[@]} -eq 0 ]; then
+            echo "No .scad files found in repo root."
+            exit 1
+          fi
+
+          printf "[" > site/models.json
+          first=1
+          for file in "${scad_files[@]}"; do
+            base="${file%.scad}"
+            out="site/${base}.stl"
+            openscad -o "$out" "$file"
+            if [ $first -eq 0 ]; then printf "," >> site/models.json; fi
+            printf "\"%s.stl\"" "$base" >> site/models.json
+            first=0
+          done
+          printf "]" >> site/models.json
 
       # 🔎 Develop branch: build only
       - name: Upload STL artifact (develop only)
         if: github.ref == 'refs/heads/develop'
         uses: actions/upload-artifact@v4
         with:
-          name: cube-stl
-          path: site/cube.stl
+          name: stl-outputs
+          path: site/*.stl
 
       # 🚀 Main branch: release + deploy
       - name: Create Release (main only)
@@ -50,7 +68,7 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: "Release v${{ github.run_number }}"
-          files: site/cube.stl
+          files: site/*.stl
 
       - name: Publish to GitHub Pages (main only)
         if: github.ref == 'refs/heads/main'

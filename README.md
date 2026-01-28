@@ -197,3 +197,38 @@ Once you remove the GUI dependency, CAD becomes:
 * Shareable
 
 That’s the real point of this project.
+
+---
+
+## Local Build
+
+This repo includes two local build scripts that mirror CI output.
+
+**macOS/Linux (bash):**
+```bash
+./build.sh
+```
+
+**Windows/macOS/Linux (PowerShell 7+):**
+```powershell
+./build.ps1
+```
+
+Both scripts:
+
+- Create `site/`
+- Copy `docs/index.html` and `.nojekyll`
+- Render each `*.scad` in the repo root to `site/*.stl`
+- Generate `site/models.json` for the viewer dropdown
+
+### OpenSCAD location
+
+If `openscad` is not on `PATH`, set `OPENSCAD_BIN` to the executable path:
+
+```bash
+export OPENSCAD_BIN="/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+```
+
+```powershell
+$env:OPENSCAD_BIN = "C:\Program Files\OpenSCAD\openscad.exe"
+```
