@@ -8,11 +8,43 @@
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
       background: #eeeeee;
+    }
+    body {
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: #222;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 14px;
+      background: rgba(238, 238, 238, 0.95);
+      border-bottom: 1px solid #d6d6d6;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    header label {
+      font-size: 14px;
+      letter-spacing: 0.2px;
+    }
+    select {
+      font-size: 14px;
+      padding: 6px 8px;
     }
     canvas {
       display: block;
+    }
+    #viewport {
+      position: fixed;
+      inset: 44px 0 0 0;
+    }
+    #status {
+      font-size: 12px;
+      opacity: 0.7;
     }
   </style>
 
@@ -28,10 +60,21 @@
 
 <body>
 
+<header>
+  <label for="modelSelect">Model</label>
+  <select id="modelSelect"></select>
+  <span id="status"></span>
+</header>
+
+<div id="viewport"></div>
+
 <script type="module">
 import * as THREE from "three";
 import { STLLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+
+const statusEl = document.getElementById("status");
+const modelSelect = document.getElementById("modelSelect");
 
 /* Scene */
 const scene = new THREE.Scene();
@@ -50,7 +93,7 @@ camera.position.set(40, 40, 40);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-document.body.appendChild(renderer.domElement);
+document.getElementById("viewport").appendChild(renderer.domElement);
 
 /* Controls */
 new OrbitControls(camera, renderer.domElement);
@@ -64,25 +107,69 @@ scene.add(dirLight);
 
 /* Load STL */
 const loader = new STLLoader();
-loader.load("cube.stl", geometry => {
-  geometry.center();
+let currentMesh = null;
+let currentEdges = null;
 
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xffff66,   // OpenSCAD warm yellow
-    metalness: 0.0,
-    roughness: 0.9
-  });
+function setStatus(message) {
+  statusEl.textContent = message;
+}
 
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+function loadModel(stlPath) {
+  setStatus("Loading…");
+  loader.load(
+    stlPath,
+    geometry => {
+      geometry.center();
 
-  /* Optional OpenSCAD-style edge outline */
-  const edges = new THREE.EdgesGeometry(geometry);
-  const lines = new THREE.LineSegments(
-    edges,
-    new THREE.LineBasicMaterial({ color: 0x000000 })
+      if (currentMesh) scene.remove(currentMesh);
+      if (currentEdges) scene.remove(currentEdges);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffff66,   // OpenSCAD warm yellow
+        metalness: 0.0,
+        roughness: 0.9
+      });
+
+      currentMesh = new THREE.Mesh(geometry, material);
+      scene.add(currentMesh);
+
+      /* Optional OpenSCAD-style edge outline */
+      const edges = new THREE.EdgesGeometry(geometry);
+      currentEdges = new THREE.LineSegments(
+        edges,
+        new THREE.LineBasicMaterial({ color: 0x000000 })
+      );
+      scene.add(currentEdges);
+      setStatus("");
+    },
+    undefined,
+    () => setStatus("Failed to load STL")
   );
-  scene.add(lines);
+}
+
+async function initModels() {
+  try {
+    const res = await fetch("models.json");
+    const models = await res.json();
+    if (!Array.isArray(models) || models.length === 0) throw new Error("empty");
+
+    for (const file of models) {
+      const label = file.replace(/\.stl$/i, "");
+      const option = document.createElement("option");
+      option.value = file;
+      option.textContent = label;
+      modelSelect.appendChild(option);
+    }
+
+    loadModel(models[0]);
+  } catch {
+    modelSelect.innerHTML = '<option value="cube.stl">cube</option>';
+    loadModel("cube.stl");
+  }
+}
+
+modelSelect.addEventListener("change", () => {
+  loadModel(modelSelect.value);
 });
 
 /* Resize handling */
@@ -98,6 +185,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+initModels();
 </script>
 
 </body>
