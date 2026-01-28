@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>STL Viewer</title>
+  <title>OpenSCAD STL Viewer</title>
+
   <style>
-    body { margin: 0; background: #111; }
-    canvas { display: block; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #eeeeee;
+    }
+    canvas {
+      display: block;
+    }
   </style>
 
-  <!-- 🔑 IMPORT MAP (this fixes everything) -->
+  <!-- Import map required for Three.js example modules -->
   <script type="importmap">
   {
     "imports": {
@@ -17,6 +25,7 @@
   }
   </script>
 </head>
+
 <body>
 
 <script type="module">
@@ -24,9 +33,11 @@ import * as THREE from "three";
 import { STLLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
+/* Scene */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111111);
+scene.background = new THREE.Color(0xeeeeee);
 
+/* Camera */
 const camera = new THREE.PerspectiveCamera(
   60,
   window.innerWidth / window.innerHeight,
@@ -35,25 +46,53 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(40, 40, 40);
 
+/* Renderer */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
+/* Controls */
 new OrbitControls(camera, renderer.domElement);
 
-scene.add(new THREE.DirectionalLight(0xffffff, 1).position.set(1,1,1));
-scene.add(new THREE.AmbientLight(0x404040));
+/* Lighting — OpenSCAD-like (flat + readable) */
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
 
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.4);
+dirLight.position.set(2, 3, 4);
+scene.add(dirLight);
+
+/* Load STL */
 const loader = new STLLoader();
 loader.load("cube.stl", geometry => {
   geometry.center();
-  const mesh = new THREE.Mesh(
-    geometry,
-    new THREE.MeshStandardMaterial({ color: 0x00ffcc })
-  );
+
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffff66,   // OpenSCAD warm yellow
+    metalness: 0.0,
+    roughness: 0.9
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
+
+  /* Optional OpenSCAD-style edge outline */
+  const edges = new THREE.EdgesGeometry(geometry);
+  const lines = new THREE.LineSegments(
+    edges,
+    new THREE.LineBasicMaterial({ color: 0x000000 })
+  );
+  scene.add(lines);
 });
 
+/* Resize handling */
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* Render loop */
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
