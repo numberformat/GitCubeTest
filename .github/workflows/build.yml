@@ -1,0 +1,61 @@
+name: Build OpenSCAD
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "**.scad"
+      - "docs/**"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install OpenSCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openscad
+
+      - name: Build site directory
+        run: |
+          mkdir -p site
+          cp docs/index.html site/
+
+      - name: Render STL
+        run: |
+          openscad -o site/cube.stl cube.scad
+
+      # 🔎 Develop branch: build only
+      - name: Upload STL artifact (develop only)
+        if: github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cube-stl
+          path: site/cube.stl
+
+      # 🚀 Main branch: release + deploy
+      - name: Create Release (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Release v${{ github.run_number }}"
+          files: site/cube.stl
+
+      - name: Publish to GitHub Pages (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: site
