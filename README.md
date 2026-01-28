@@ -1,13 +1,13 @@
-# GitCubeTest
+# SCADPipeline
 Test Repository for an OpenSCAD project
 
 ## 3D Preview
 
 👉 **Interactive viewer:**
-https://numberformat.github.io/GitCubeTest/
+https://numberformat.github.io/SCADPipeline/
 
 👉 **Download STL:**
-[Latest Release](https://github.com/numberformat/GitCubeTest/releases/latest)
+[Latest Release](https://github.com/numberformat/SCADPipeline/releases/latest)
 
 A minimal reference project demonstrating how to:
 
@@ -26,7 +26,11 @@ This repository intentionally keeps the model simple (a cube) so the focus stays
 ```
 
 .
-├── cube.scad                  # Parametric OpenSCAD model (source of truth)
+├── src/
+│   ├── models/                # Top-level printable parts / assemblies
+│   │   └── cube.scad
+│   ├── lib/                   # Reusable modules (NOT rendered directly)
+│   └── config/                # Dimensions, constants, variants
 ├── docs/
 │   └── index.html              # Browser-based STL viewer (Three.js)
 ├── .github/
@@ -46,7 +50,7 @@ This repository intentionally keeps the model simple (a cube) so the focus stays
 
 ---
 
-## OpenSCAD Model (`cube.scad`)
+## OpenSCAD Model (`src/models/cube.scad`)
 
 The OpenSCAD file defines a fully parametric model:
 
@@ -167,7 +171,7 @@ This gives consumers a clean, printable download while keeping Git history seman
 
 To adapt this setup for your own project:
 
-1. Replace `cube.scad` with your own OpenSCAD model(s)
+1. Put your printable parts in `src/models/`
 2. Add additional `openscad -o ...` commands in CI for multiple parts
 3. Update `index.html` to load different STLs or provide a selector
 4. Keep generated geometry out of Git
@@ -218,7 +222,7 @@ Both scripts:
 
 - Create `site/`
 - Copy `docs/index.html` and `.nojekyll`
-- Render each `*.scad` in the repo root to `site/*.stl`
+- Render each `*.scad` in `src/models/` to `site/*.stl`
 - Generate `site/models.json` for the viewer dropdown
 
 ### OpenSCAD location

@@ -21,16 +21,16 @@ cp docs/index.html site/
 cp .nojekyll site/
 
 shopt -s nullglob
-scad_files=( *.scad )
+scad_files=( src/models/*.scad )
 if [ ${#scad_files[@]} -eq 0 ]; then
-  echo "No .scad files found in repo root." >&2
+  echo "No .scad files found in src/models." >&2
   exit 1
 fi
 
 printf "[" > site/models.json
 first=1
 for file in "${scad_files[@]}"; do
-  base="${file%.scad}"
+  base="$(basename "${file%.scad}")"
   out="site/${base}.stl"
   "$OPENSCAD" -o "$out" "$file"
   if [ $first -eq 0 ]; then printf "," >> site/models.json; fi

@@ -23,9 +23,9 @@ New-Item -ItemType Directory -Force -Path "site" | Out-Null
 Copy-Item -Force "docs/index.html" "site/index.html"
 Copy-Item -Force ".nojekyll" "site/.nojekyll"
 
-$scadFiles = Get-ChildItem -Path "." -Filter "*.scad" -File
+$scadFiles = Get-ChildItem -Path "src/models" -Filter "*.scad" -File
 if ($scadFiles.Count -eq 0) {
-  Write-Error "No .scad files found in repo root."
+  Write-Error "No .scad files found in src/models."
   exit 1
 }
 
