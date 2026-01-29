@@ -227,6 +227,30 @@ Both scripts run the same Docker container and:
 - Render each `*.scad` in `src/models/` to `site/*.stl`
 - Generate `site/models.json` for the viewer dropdown
 
+### Run viewer
+
+Serve the built site locally (defaults to http://localhost:8080; if taken, the script will pick the next available port). You can also force a port with `SITE_PORT`.
+
+```bash
+./run.sh
+```
+
+```powershell
+./run.ps1
+```
+
+### Clean artifacts
+
+Remove all generated build output.
+
+```bash
+./clean.sh
+```
+
+```powershell
+./clean.ps1
+```
+
 ### Docker image
 
 Default image: `openscad/openscad:bookworm`
