@@ -17,31 +17,11 @@ A minimal reference project demonstrating how to:
 - Preview STL geometry interactively using **GitHub Pages + Three.js**
 - Keep source control clean (no generated STLs committed)
 
-This repository intentionally keeps the model simple (a cube) so the focus stays on **the pipeline**, not the geometry.
+This repository intentionally keeps the model simple so the focus stays on **the pipeline**, not the geometry.
 
 ---
 
-## Project Structure
-
-```
-
-.
-├── src/
-│   ├── models/                # Top-level printable parts / assemblies
-│   │   └── cube.scad
-│   ├── lib/                   # Reusable modules (NOT rendered directly)
-│   └── config/                # Dimensions, constants, variants
-├── docs/
-│   └── index.html              # Browser-based STL viewer (Three.js)
-├── .github/
-│   └── workflows/
-│       └── build.yml           # CI pipeline (OpenSCAD → STL → release/pages)
-├── .nojekyll                   # Disables Jekyll for GitHub Pages
-└── README.md
-
-````
-
-### Design principles
+## Design principles
 
 - **Source, not artifacts, live in Git**
 - **STLs are generated**, never committed
@@ -50,163 +30,16 @@ This repository intentionally keeps the model simple (a cube) so the focus stays
 
 ---
 
-## OpenSCAD Model (`src/models/cube.scad`)
+## How it works
 
-The OpenSCAD file defines a fully parametric model:
-
-```scad
-cube_size = 20;
-cube([cube_size, cube_size, cube_size], center = true);
-````
-
-Changing a parameter and committing triggers:
-
-* A rebuild
-* A new STL
-* A new release (on `main`)
-* An updated 3D preview
-
-This pattern scales naturally to multiple modules, assemblies, and parts.
+- Builds run inside a Docker container with OpenSCAD preinstalled.
+- The repo is bind‑mounted into the container; outputs are written to `site/`.
+- The viewer loads `site/models.json` to populate the model dropdown.
+- GitHub Actions runs the same containerized build.
 
 ---
 
-## Branch Strategy
-
-This project uses a conservative branch model:
-
-| Branch     | Purpose                        |
-| ---------- | ------------------------------ |
-| `develop`  | Iteration, testing, validation |
-| `main`     | Stable, publishable artifacts  |
-| `gh-pages` | Generated static output only   |
-
-### Behavior by branch
-
-* **develop**
-
-  * STL is built in CI
-  * Output is uploaded as a workflow artifact
-  * No releases
-  * No Pages deployment
-
-* **main**
-
-  * STL is built in CI
-  * GitHub Release is created
-  * STL viewer is deployed to GitHub Pages
-
----
-
-## GitHub Actions (CI)
-
-The workflow performs the following steps:
-
-1. Check out the repository
-2. Install OpenSCAD on Linux
-3. Render STL files headlessly
-4. Assemble a static site directory
-5. Conditionally:
-
-   * Upload artifacts (develop)
-   * Create releases and deploy Pages (main)
-
-Key idea: **the same build, different outcomes depending on trust level**.
-
----
-
-## STL Viewer (GitHub Pages)
-
-The STL preview is implemented using:
-
-* Native browser **ES modules**
-* **Import maps** (no bundler, no npm)
-* Three.js + STLLoader
-* OpenSCAD-like colors and lighting
-
-### Why import maps?
-
-Three.js example modules internally import `"three"` as a bare specifier.
-Browsers require an import map to resolve this without a bundler.
-
-This keeps the site:
-
-* Fully static
-* CDN-based
-* CI-friendly
-* Archive-safe
-
----
-
-## GitHub Pages Setup
-
-Pages is configured to serve:
-
-* **Branch**: `gh-pages`
-* **Folder**: `/ (root)`
-
-The `gh-pages` branch is **written exclusively by CI** and contains only:
-
-```
-index.html
-cube.stl
-.nojekyll
-```
-
-No hand edits. No history pollution.
-
----
-
-## Releases
-
-Each successful build on `main` creates a GitHub Release with:
-
-* Versioned tag
-* Generated STL attached as an asset
-
-This gives consumers a clean, printable download while keeping Git history semantic.
-
----
-
-## Reproducing This Pattern
-
-To adapt this setup for your own project:
-
-1. Put your printable parts in `src/models/`
-2. Add additional `openscad -o ...` commands in CI for multiple parts
-3. Update `index.html` to load different STLs or provide a selector
-4. Keep generated geometry out of Git
-5. Treat CI as the authoritative builder
-
-This works equally well for:
-
-* Single parts
-* Assemblies
-* Parametric libraries
-* Hardware projects
-* Print-ready releases
-
----
-
-## Why This Matters
-
-This repository demonstrates a simple but powerful idea:
-
-> **Geometry can be built, versioned, reviewed, and published the same way software is.**
-
-Once you remove the GUI dependency, CAD becomes:
-
-* Automatable
-* Reviewable
-* Reproducible
-* Shareable
-
-That’s the real point of this project.
-
----
-
-## Local Build
-
-Builds run entirely in Docker (no local OpenSCAD install required).
+## Local build (Docker only)
 
 Requirements: Docker Desktop (or Docker Engine).
 
@@ -217,7 +50,7 @@ Requirements: Docker Desktop (or Docker Engine).
 
 **Windows/macOS/Linux (PowerShell 7+):**
 ```powershell
-$env$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
+./build.ps1
 ```
 
 Both scripts run the same Docker container and:
@@ -274,3 +107,27 @@ export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
 ```powershell
 $env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
 ```
+
+---
+
+## Releases
+
+Each successful build on `main` creates a GitHub Release with:
+
+- Versioned tag
+- Generated STL attached as an asset
+
+---
+
+## Why this matters
+
+This repository demonstrates a simple but powerful idea:
+
+> **Geometry can be built, versioned, reviewed, and published the same way software is.**
+
+Once you remove the GUI dependency, CAD becomes:
+
+- Automatable
+- Reviewable
+- Reproducible
+- Shareable
