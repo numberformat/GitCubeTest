@@ -15,7 +15,7 @@ A minimal reference project demonstrating how to:
 - Build STL files **headlessly in CI**
 - Publish generated artifacts via **GitHub Releases**
 - Preview STL geometry interactively using **GitHub Pages + Three.js**
-- Keep source control clean (no generated STLs committed)
+- Keep source control clean (generated STLs are not committed)
 
 This repository intentionally keeps the model simple so the focus stays on **the pipeline**, not the geometry.
 
@@ -24,7 +24,8 @@ This repository intentionally keeps the model simple so the focus stays on **the
 ## Design principles
 
 - **Source, not artifacts, live in Git**
-- **STLs are generated**, never committed
+- **Generated STLs are built in CI**
+- **Pre-built assets are inputs**, committed under `src/assets/`
 - **CI is the compiler**
 - **Pages is a viewer**, not a build system
 
@@ -58,7 +59,14 @@ Both scripts run the same Docker container and:
 - Create `site/`
 - Copy `docs/index.html` and `.nojekyll`
 - Render each `*.scad` in `src/models/` to `site/*.stl`
+- Copy pre-built assets from `src/assets/` into `site/assets/` (STL assets are listed in `site/models.json`)
 - Generate `site/models.json` for the viewer dropdown
+
+The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
+
+### Assets-only template
+
+To use this repository without OpenSCAD sources, put your `*.stl` files directly in `src/assets/` and skip `src/models/` entirely. The build will publish your pre-built STLs into the viewer with no `.scad` files required.
 
 ### Run viewer
 
