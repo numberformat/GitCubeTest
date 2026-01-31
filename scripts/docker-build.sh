@@ -6,12 +6,53 @@ root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root_dir"
 
 mkdir -p site
+mkdir -p site/images
 cp docs/index.html site/
 cp .nojekyll site/
+
+image_size="${OPENSCAD_IMAGE_SIZE:-1200,900}"
+
+convert_image() {
+  local in_path="$1"
+  local out_path="$2"
+  if command -v magick >/dev/null 2>&1; then
+    magick "$in_path" "$out_path"
+    return $?
+  fi
+  if command -v convert >/dev/null 2>&1; then
+    convert "$in_path" "$out_path"
+    return $?
+  fi
+  if [ "${in_path##*.}" = "png" ] || [ "${in_path##*.}" = "PNG" ]; then
+    cp "$in_path" "$out_path"
+    return $?
+  fi
+  echo "WARN: No image converter found for $in_path (install ImageMagick)" >&2
+  return 1
+}
+
+render_preview() {
+  local stl_path="$1"
+  local png_path="$2"
+  local stl_dir stl_abs tmp_scad tmp_err
+  stl_dir="$(cd "$(dirname "$stl_path")" && pwd)"
+  stl_abs="${stl_dir}/$(basename "$stl_path")"
+  tmp_scad="$(mktemp "${TMPDIR:-/tmp}/scadpreview.XXXXXX.scad")"
+  tmp_err="$(mktemp "${TMPDIR:-/tmp}/scadpreview.XXXXXX.err")"
+  printf 'import("%s");\n' "$stl_abs" > "$tmp_scad"
+  if ! openscad -o "$png_path" --imgsize="$image_size" --viewall "$tmp_scad" 2>"$tmp_err"; then
+    echo "WARN: Failed to render preview for $stl_path" >&2
+    if [ -s "$tmp_err" ]; then
+      sed -n '1,8p' "$tmp_err" >&2
+    fi
+  fi
+  rm -f "$tmp_scad" "$tmp_err"
+}
 
 shopt -s nullglob
 scad_files=( src/models/*.scad )
 asset_stls=( src/assets/*.stl )
+user_images=( src/images/* )
 if [ ${#scad_files[@]} -eq 0 ] && [ ${#asset_stls[@]} -eq 0 ]; then
   echo "No .scad files in src/models or .stl files in src/assets." >&2
   exit 1
@@ -22,21 +63,34 @@ if [ -d src/assets ]; then
   cp -R src/assets/. site/assets/
 fi
 
+if [ -d src/images ] && [ ${#user_images[@]} -gt 0 ]; then
+  while IFS= read -r path; do
+    [ -f "$path" ] || continue
+    base="$(basename "$path")"
+    base_no_ext="${base%.*}"
+    out="site/images/${base_no_ext}.png"
+    convert_image "$path" "$out" || true
+  done < <(printf '%s\n' "${user_images[@]}" | sort -f)
+fi
+
 printf "[" > site/models.json
 first=1
 for file in "${scad_files[@]}"; do
   base="$(basename "${file%.scad}")"
   out="site/${base}.stl"
   openscad -o "$out" "$file"
+  render_preview "$out" "site/images/${base}_stl.png"
   if [ $first -eq 0 ]; then printf "," >> site/models.json; fi
   printf "\"%s.stl\"" "$base" >> site/models.json
   first=0
 done
 for file in "${asset_stls[@]}"; do
   base="$(basename "$file")"
+  base_no_ext="${base%.stl}"
   if [ $first -eq 0 ]; then printf "," >> site/models.json; fi
   printf "\"assets/%s\"" "$base" >> site/models.json
   first=0
+  render_preview "site/assets/$base" "site/images/${base_no_ext}_stl.png"
 done
 printf "]" >> site/models.json
 

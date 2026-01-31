@@ -87,9 +87,12 @@ Both scripts run the same Docker container and:
 * Copy `docs/index.html` and `.nojekyll`
 * Render each `*.scad` in `src/models/` to `site/*.stl`
 * Copy pre-built assets from `src/assets/` into `site/assets/`
+* Render PNG previews for each STL into `site/images/` with an `_stl` suffix
 * Generate `site/models.json` for the viewer dropdown
 
 The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
+
+Preview image size defaults to `1200,900` and can be overridden with `OPENSCAD_IMAGE_SIZE` (format: `WIDTH,HEIGHT`).
 
 ---
 
@@ -132,7 +135,7 @@ Remove all generated build output.
 
 ### Docker image
 
-Default image: `openscad/openscad:bookworm`
+Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
 
 If you're on Apple Silicon (arm64) and see a manifest error:
 
@@ -153,6 +156,8 @@ export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
 ```powershell
 $env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
 ```
+
+The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
 
 ---
 

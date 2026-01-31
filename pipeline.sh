@@ -106,7 +106,30 @@ docker_image() {
   if [ -n "${OPENSCAD_DOCKER_IMAGE:-}" ]; then
     printf "%s" "$OPENSCAD_DOCKER_IMAGE"
   else
-    printf "%s" "openscad/openscad:bookworm"
+    printf "%s" "scadpipeline:latest"
+  fi
+}
+
+ensure_docker_image() {
+  local image platform
+  image="$(docker_image)"
+  if [ "$image" = "scadpipeline:latest" ]; then
+    if ! docker image inspect "$image" >/dev/null 2>&1; then
+      if [ ! -f "$root_dir/Dockerfile" ]; then
+        echo "ERROR: Dockerfile not found; cannot build $image." >&2
+        exit 1
+      fi
+      echo "Building Docker image $image..."
+      platform="${OPENSCAD_DOCKER_PLATFORM:-}"
+      if [ -z "$platform" ]; then
+        platform="$(docker_platform_args || true)"
+      fi
+      if [ -n "$platform" ]; then
+        docker build --platform "$platform" -t "$image" "$root_dir"
+      else
+        docker build -t "$image" "$root_dir"
+      fi
+    fi
   fi
 }
 
@@ -126,12 +149,13 @@ docker_platform_args() {
 
 cmd_build() {
   ensure_docker
+  ensure_docker_image
   local image platform_args
   image="$(docker_image)"
   platform_args=()
   if platform="$(docker_platform_args)"; then
     if [ -n "$platform" ]; then
-      platform_args=($platform)
+      platform_args=(--platform "$platform")
     fi
   fi
   docker run --rm \
@@ -221,6 +245,7 @@ case "$cmd" in
   create-github)
     ensure_git_ready
     ensure_docker
+    ensure_docker_image
     touch "${HOME}/.scadpipeline"
     chmod 600 "${HOME}/.scadpipeline" || true
     image="$(docker_image)"

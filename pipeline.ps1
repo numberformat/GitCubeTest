@@ -107,7 +107,30 @@ function Get-DockerImage {
   if (-not [string]::IsNullOrWhiteSpace($env:OPENSCAD_DOCKER_IMAGE)) {
     return $env:OPENSCAD_DOCKER_IMAGE
   }
-  return "openscad/openscad:bookworm"
+  return "scadpipeline:latest"
+}
+
+function Ensure-DockerImage {
+  $image = Get-DockerImage
+  if ($image -eq "scadpipeline:latest") {
+    $hasImage = $false
+    try {
+      & docker image inspect $image | Out-Null
+      $hasImage = $true
+    } catch { }
+    if (-not $hasImage) {
+      if (-not (Test-Path "Dockerfile")) {
+        Write-Error "ERROR: Dockerfile not found; cannot build $image."
+        exit 1
+      }
+      Write-Host "Building Docker image $image..."
+      if (-not [string]::IsNullOrWhiteSpace($env:OPENSCAD_DOCKER_PLATFORM)) {
+        & docker build --platform $env:OPENSCAD_DOCKER_PLATFORM -t $image .
+      } else {
+        & docker build -t $image .
+      }
+    }
+  }
 }
 
 function Get-PlatformArgs {
@@ -128,6 +151,7 @@ function Get-PlatformArgs {
 
 function Invoke-Build {
   Ensure-Docker
+  Ensure-DockerImage
   $image = Get-DockerImage
   $platformArgs = Get-PlatformArgs
   $mount = "$(Get-Location):/workspace"
@@ -225,6 +249,7 @@ switch ($cmd) {
   "create-github" {
     Ensure-GitReady
     Ensure-Docker
+    Ensure-DockerImage
     if (-not (Test-Path "$HOME/.scadpipeline")) {
       New-Item -ItemType File -Path "$HOME/.scadpipeline" -Force | Out-Null
     }
