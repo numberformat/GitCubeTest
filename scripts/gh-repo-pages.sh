@@ -202,8 +202,9 @@ create_repo() {
     fi
     warn "Owner is required."
   done
+  default_repo="$(basename "$(pwd)")"
   while true; do
-    repo="$(prompt "Repository name (no spaces)")"
+    repo="$(prompt "Repository name (no spaces)" "$default_repo")"
     if [ -n "$repo" ]; then
       break
     fi

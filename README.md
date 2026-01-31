@@ -215,6 +215,8 @@ if [ -f "./README_template.md" ]; then
   mv "./README_template.md" "./README.md"
 fi
 
+mkdir -p src/assets src/config src/lib src/models
+
 rm -rf "$TMP_DIR"
 
 echo "SCADPipeline updated."
@@ -259,6 +261,8 @@ Copy-Item (Join-Path $PipelineDir.FullName "README.md") (Join-Path (Get-Location
 if (Test-Path "README_template.md") {
   Move-Item "README_template.md" "README.md" -Force
 }
+
+New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
 
 Remove-Item $Temp -Recurse -Force
 Write-Host "SCADPipeline updated."
