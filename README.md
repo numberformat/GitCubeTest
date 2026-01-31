@@ -78,7 +78,7 @@ Avoid `delete_repo` and `project` unless you explicitly need them.
 **Windows/macOS/Linux (PowerShell 7+):**
 
 ```powershell
-./pipeline.ps1 build
+.\pipeline.ps1 build
 ```
 
 Both scripts run the same Docker container and:
@@ -115,7 +115,7 @@ Serve the built site locally (defaults to [http://localhost:8080](http://localho
 ```
 
 ```powershell
-./pipeline.ps1 run
+.\pipeline.ps1 run
 ```
 
 ---
@@ -129,7 +129,7 @@ Remove all generated build output.
 ```
 
 ```powershell
-./pipeline.ps1 clean
+.\pipeline.ps1 clean
 ```
 
 ---
@@ -365,7 +365,7 @@ GitHub Pages is a free hosting service for static sites. It needs to be enabled 
 ```
 
 ```powershell
-./pipeline.ps1 create-github
+.\pipeline.ps1 create-github
 ```
 
 The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
@@ -408,5 +408,3 @@ Once you remove the GUI dependency, CAD becomes:
 * Reviewable
 * Reproducible
 * Shareable
-
-That’s the real product here.
