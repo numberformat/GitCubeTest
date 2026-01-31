@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>3D Model Viewer</title>
+  <title>SCADPipeline</title>
 
   <style>
     html, body {
@@ -268,7 +268,8 @@
 <body>
 
 <div class="page">
-  <!--PAGE_TITLE-->
+  <h1 class="page-title">SCADPipeline</h1>
+<div class="build-date">January 31, 2026</div>
   <div class="viewer" id="viewer">
     <button class="nav-btn nav-left" id="prevBtn" aria-label="Previous image">◀</button>
     <div class="viewer-media" id="viewerMedia">
@@ -288,422 +289,308 @@
     <button class="tab-btn" data-tab="license">LICENSE</button>
   </div>
   <section class="tab-panel" id="readme-tab">
-<section class="readme"><pre># SCADPipeline
-
-A reusable CI/CD toolchain for OpenSCAD projects
-
-SCADPipeline turns OpenSCAD designs into a **software-style build pipeline**:
-
-* Parametric models in Git
-* Deterministic STL builds in CI
-* Web-based 3D previews
-* Versioned, downloadable releases
-
-This repository contains both a **reference implementation** (a cube and a cylinder) and the **pipeline itself**, which you can reuse across your own design projects without forking.
-
----
-
-## 3D Preview
-
-👉 **Interactive viewer:**
-[https://numberformat.github.io/SCADPipeline/](https://numberformat.github.io/SCADPipeline/)
-
-👉 **Download STL:**
-[Latest Release](https://github.com/numberformat/SCADPipeline/releases/latest)
-
-The geometry here is intentionally simple.
-The point of this repo is not the shapes — it is the **build system**.
-
----
-
-## What this repository is
-
-This project serves two roles:
-
-1. A minimal example OpenSCAD project (cube + cylinder)
-2. A production-grade pipeline that can be imported into other repositories
-
-You can browse, build, and preview this repo directly — or you can treat it as an **OpenSCAD toolchain** and pull it into your own design projects.
-
----
-
-## Design principles
-
-* **Source, not artifacts, live in Git**
-* **Generated STLs are built in CI**
-* **Pre-built assets are inputs**, committed under `src/assets/`
-* **CI is the compiler**
-* **Pages is a viewer**, not a build system
-
----
-
-## How it works
-
-* Builds run inside a Docker container with OpenSCAD preinstalled.
-* The repo is bind-mounted into the container; outputs are written to `site/`.
-* The viewer loads `site/models.json` to populate the model dropdown.
-* GitHub Actions runs the same containerized build.
-
-Everything that works locally also works in CI.
-
----
-
-## Local build (Docker only)
-
-Requirements: Docker Desktop (or Docker Engine).
-
-If you use the GitHub setup wizard, your token is saved to `~/.scadpipeline` on your host.
+    <section class="readme"><h1>SCADPipeline</h1>
+<p>A reusable CI/CD toolchain for OpenSCAD projects</p>
+<p>SCADPipeline turns OpenSCAD designs into a <strong>software-style build pipeline</strong>:</p>
+<ul>
+<li>Parametric models in Git</li>
+<li>Deterministic STL builds in CI</li>
+<li>Web-based 3D previews</li>
+<li>Versioned, downloadable releases</li>
+</ul>
+<p>This repository contains both a <strong>reference implementation</strong> (a cube and a cylinder) and the <strong>pipeline itself</strong>, which you can reuse across your own design projects without forking.</p>
+<hr />
+<h2>3D Preview</h2>
+<p>👉 <strong>Interactive viewer:</strong>
+<a href="https://numberformat.github.io/SCADPipeline/">https://numberformat.github.io/SCADPipeline/</a></p>
+<p>👉 <strong>Download STL:</strong>
+<a href="https://github.com/numberformat/SCADPipeline/releases/latest">Latest Release</a></p>
+<p>The geometry here is intentionally simple.
+The point of this repo is not the shapes — it is the <strong>build system</strong>.</p>
+<hr />
+<h2>What this repository is</h2>
+<p>This project serves two roles:</p>
+<ol>
+<li>A minimal example OpenSCAD project (cube + cylinder)</li>
+<li>A production-grade pipeline that can be imported into other repositories</li>
+</ol>
+<p>You can browse, build, and preview this repo directly — or you can treat it as an <strong>OpenSCAD toolchain</strong> and pull it into your own design projects.</p>
+<hr />
+<h2>Design principles</h2>
+<ul>
+<li><strong>Source, not artifacts, live in Git</strong></li>
+<li><strong>Generated STLs are built in CI</strong></li>
+<li><strong>Pre-built assets are inputs</strong>, committed under <code>src/assets/</code></li>
+<li><strong>CI is the compiler</strong></li>
+<li><strong>Pages is a viewer</strong>, not a build system</li>
+</ul>
+<hr />
+<h2>How it works</h2>
+<ul>
+<li>Builds run inside a Docker container with OpenSCAD preinstalled.</li>
+<li>The repo is bind-mounted into the container; outputs are written to <code>site/</code>.</li>
+<li>The viewer loads <code>site/models.json</code> to populate the model dropdown.</li>
+<li>GitHub Actions runs the same containerized build.</li>
+</ul>
+<p>Everything that works locally also works in CI.</p>
+<hr />
+<h2>Local build (Docker only)</h2>
+<p>Requirements: Docker Desktop (or Docker Engine).</p>
+<p>If you use the GitHub setup wizard, your token is saved to <code>~/.scadpipeline</code> on your host.
 When creating a classic PAT, use minimal scopes:
-- public repos only: `public_repo`
-- private repos: `repo`
-- org repos: `admin:org`
-Avoid `delete_repo` and `project` unless you explicitly need them.
-
-**macOS/Linux (bash):**
-
-```bash
-./pipeline.sh build
-```
-
-**Windows/macOS/Linux (PowerShell 7+):**
-
-```powershell
-./pipeline.ps1 build
-```
-
-Both scripts run the same Docker container and:
-
-* Create `site/`
-* Copy `docs/index.html` and `.nojekyll`
-* Append `README.md` (rendered as HTML) to the end of the viewer page
-* Render each `*.scad` in `src/models/` to `site/*.stl`
-* Copy pre-built assets from `src/assets/` into `site/assets/`
-* Render PNG previews for each STL into `site/images/` with an `_stl` suffix
-* Generate `site/models.json` for the viewer dropdown
-
-The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
-
-Preview image size defaults to `1200,900` and can be overridden with `OPENSCAD_IMAGE_SIZE` (format: `WIDTH,HEIGHT`).
-
----
-
-### Assets-only projects
-
-You can use SCADPipeline without OpenSCAD sources at all.
-
-Put your `*.stl` files in `src/assets/` and leave `src/models/` empty.
-The build will publish your pre-built STLs into the viewer with no `.scad` files required.
-
----
-
-### Run the viewer
-
-Serve the built site locally (defaults to [http://localhost:8080](http://localhost:8080); if taken, the script picks the next available port). You can override with `SITE_PORT`.
-
-```bash
-./pipeline.sh run
-```
-
-```powershell
-./pipeline.ps1 run
-```
-
----
-
-### Clean artifacts
-
-Remove all generated build output.
-
-```bash
-./pipeline.sh clean
-```
-
-```powershell
-./pipeline.ps1 clean
-```
-
----
-
-### Docker image
-
-Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
-
-If you're on Apple Silicon (arm64) and see a manifest error:
-
-```bash
-export OPENSCAD_DOCKER_PLATFORM="linux/amd64"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_PLATFORM = "linux/amd64"
-```
-
-Override the image if needed:
-
-```bash
-export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
-```
-
-The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
-
----
-
-## Using SCADPipeline in Your Own Projects (No Forking Required)
-
-SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.
-
-Instead, each design project pulls a **snapshot** of the SCADPipeline build system using a small update script.
-This gives you all of the CI/CD, viewer, and build logic — without inheriting this repository’s history or demo models.
-
-Think of SCADPipeline as a **toolchain**, not a template.
-
----
-
-### How it works
-
-SCADPipeline publishes itself as a downloadable snapshot via GitHub.
-Your project pulls that snapshot and copies the pipeline files into your repo.
-
-Your design stays yours.
-The pipeline stays updatable.
-
-You choose when to upgrade.
-
----
-
-### Step 1 — Add the update script to your project
-
-In the root of your own OpenSCAD project, add one of these:
-
-#### macOS / Linux
-
-Create `get_pipeline.sh`:
-
-```bash
-#!/usr/bin/env bash
+- public repos only: <code>public_repo</code>
+- private repos: <code>repo</code>
+- org repos: <code>admin:org</code>
+Avoid <code>delete_repo</code> and <code>project</code> unless you explicitly need them.</p>
+<p><strong>macOS/Linux (bash):</strong></p>
+<pre><code class="language-bash">./pipeline.sh build
+</code></pre>
+<p><strong>Windows/macOS/Linux (PowerShell 7+):</strong></p>
+<pre><code class="language-powershell">./pipeline.ps1 build
+</code></pre>
+<p>Both scripts run the same Docker container and:</p>
+<ul>
+<li>Create <code>site/</code></li>
+<li>Copy <code>docs/index.html</code> and <code>.nojekyll</code></li>
+<li>Append <code>README.md</code> (rendered as HTML) to the end of the viewer page</li>
+<li>Render each <code>*.scad</code> in <code>src/models/</code> to <code>site/*.stl</code></li>
+<li>Copy pre-built assets from <code>src/assets/</code> into <code>site/assets/</code></li>
+<li>Render PNG previews for each STL into <code>site/images/</code> with an <code>_stl</code> suffix</li>
+<li>Generate <code>site/models.json</code> for the viewer dropdown</li>
+</ul>
+<p>The viewer lists both compiled STLs (from <code>src/models/</code>) and pre-built STLs (from <code>src/assets/</code>). For simplicity, the build uses <strong>top-level files only</strong> (no recursion).</p>
+<p>Preview image size defaults to <code>1200,900</code> and can be overridden with <code>OPENSCAD_IMAGE_SIZE</code> (format: <code>WIDTH,HEIGHT</code>).</p>
+<hr />
+<h3>Assets-only projects</h3>
+<p>You can use SCADPipeline without OpenSCAD sources at all.</p>
+<p>Put your <code>*.stl</code> files in <code>src/assets/</code> and leave <code>src/models/</code> empty.
+The build will publish your pre-built STLs into the viewer with no <code>.scad</code> files required.</p>
+<hr />
+<h3>Run the viewer</h3>
+<p>Serve the built site locally (defaults to <a href="http://localhost:8080">http://localhost:8080</a>; if taken, the script picks the next available port). You can override with <code>SITE_PORT</code>.</p>
+<pre><code class="language-bash">./pipeline.sh run
+</code></pre>
+<pre><code class="language-powershell">./pipeline.ps1 run
+</code></pre>
+<hr />
+<h3>Clean artifacts</h3>
+<p>Remove all generated build output.</p>
+<pre><code class="language-bash">./pipeline.sh clean
+</code></pre>
+<pre><code class="language-powershell">./pipeline.ps1 clean
+</code></pre>
+<hr />
+<h3>Docker image</h3>
+<p>Default image: <code>scadpipeline:latest</code> (auto-built from <code>Dockerfile</code> if missing)</p>
+<p>If you're on Apple Silicon (arm64) and see a manifest error:</p>
+<pre><code class="language-bash">export OPENSCAD_DOCKER_PLATFORM=&quot;linux/amd64&quot;
+</code></pre>
+<pre><code class="language-powershell">$env:OPENSCAD_DOCKER_PLATFORM = &quot;linux/amd64&quot;
+</code></pre>
+<p>Override the image if needed:</p>
+<pre><code class="language-bash">export OPENSCAD_DOCKER_IMAGE=&quot;openscad/openscad:bookworm&quot;
+</code></pre>
+<pre><code class="language-powershell">$env:OPENSCAD_DOCKER_IMAGE = &quot;openscad/openscad:bookworm&quot;
+</code></pre>
+<p>The default image is built from <code>Dockerfile</code> and includes ImageMagick (for <code>src/images</code> conversion) and GitHub CLI.</p>
+<hr />
+<h2>Using SCADPipeline in Your Own Projects (No Forking Required)</h2>
+<p>SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.</p>
+<p>Instead, each design project pulls a <strong>snapshot</strong> of the SCADPipeline build system using a small update script.
+This gives you all of the CI/CD, viewer, and build logic — without inheriting this repository’s history or demo models.</p>
+<p>Think of SCADPipeline as a <strong>toolchain</strong>, not a template.</p>
+<hr />
+<h3>How it works</h3>
+<p>SCADPipeline publishes itself as a downloadable snapshot via GitHub.
+Your project pulls that snapshot and copies the pipeline files into your repo.</p>
+<p>Your design stays yours.
+The pipeline stays updatable.</p>
+<p>You choose when to upgrade.</p>
+<hr />
+<h3>Step 1 — Add the update script to your project</h3>
+<p>In the root of your own OpenSCAD project, add one of these:</p>
+<h4>macOS / Linux</h4>
+<p>Create <code>get_pipeline.sh</code>:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
 set -e
 
-REPO_URL="https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
-TMP_DIR="$(mktemp -d)"
+REPO_URL=&quot;https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip&quot;
+TMP_DIR=&quot;$(mktemp -d)&quot;
 
-echo "Downloading SCADPipeline..."
-curl -L "$REPO_URL" -o "$TMP_DIR/pipeline.zip"
+echo &quot;Downloading SCADPipeline...&quot;
+curl -L &quot;$REPO_URL&quot; -o &quot;$TMP_DIR/pipeline.zip&quot;
 
-echo "Extracting..."
-unzip -q "$TMP_DIR/pipeline.zip" -d "$TMP_DIR"
+echo &quot;Extracting...&quot;
+unzip -q &quot;$TMP_DIR/pipeline.zip&quot; -d &quot;$TMP_DIR&quot;
 
-PIPELINE_DIR="$(find "$TMP_DIR" -maxdepth 1 -type d -name "SCADPipeline-*")"
+PIPELINE_DIR=&quot;$(find &quot;$TMP_DIR&quot; -maxdepth 1 -type d -name &quot;SCADPipeline-*&quot;)&quot;
 
 # Copy the pipeline into this project
 rsync -av \
   --exclude 'examples/' \
   --exclude '*.scad' \
   --exclude 'LICENSE' \
-  "$PIPELINE_DIR/" \
-  "./"
+  &quot;$PIPELINE_DIR/&quot; \
+  &quot;./&quot;
 
-cp "$PIPELINE_DIR/README.md" "./README_pipeline.md"
-if [ -f "./README_template.md" ]; then
-  mv "./README_template.md" "./README.md"
+cp &quot;$PIPELINE_DIR/README.md&quot; &quot;./README_pipeline.md&quot;
+if [ -f &quot;./README_template.md&quot; ]; then
+  mv &quot;./README_template.md&quot; &quot;./README.md&quot;
 fi
 
 mkdir -p src/assets src/config src/lib src/models
 
-rm -rf "$TMP_DIR"
+rm -rf &quot;$TMP_DIR&quot;
 
-echo "SCADPipeline updated."
-```
-
-Then make it executable:
-
-```bash
-chmod +x get_pipeline.sh
-```
-
----
-
-#### Windows (PowerShell)
-
-Create `get_pipeline.ps1`:
-
-```powershell
-$RepoUrl = "https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
+echo &quot;SCADPipeline updated.&quot;
+</code></pre>
+<p>Then make it executable:</p>
+<pre><code class="language-bash">chmod +x get_pipeline.sh
+</code></pre>
+<hr />
+<h4>Windows (PowerShell)</h4>
+<p>Create <code>get_pipeline.ps1</code>:</p>
+<pre><code class="language-powershell">$RepoUrl = &quot;https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip&quot;
 $Temp = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid())
 
-Write-Host "Downloading SCADPipeline..."
-Invoke-WebRequest $RepoUrl -OutFile "$Temp\pipeline.zip"
+Write-Host &quot;Downloading SCADPipeline...&quot;
+Invoke-WebRequest $RepoUrl -OutFile &quot;$Temp\pipeline.zip&quot;
 
-Write-Host "Extracting..."
-Expand-Archive "$Temp\pipeline.zip" "$Temp"
+Write-Host &quot;Extracting...&quot;
+Expand-Archive &quot;$Temp\pipeline.zip&quot; &quot;$Temp&quot;
 
-$PipelineDir = Get-ChildItem $Temp | Where-Object { $_.Name -like "SCADPipeline-*" } | Select-Object -First 1
+$PipelineDir = Get-ChildItem $Temp | Where-Object { $_.Name -like &quot;SCADPipeline-*&quot; } | Select-Object -First 1
 
 # Copy everything except example models
 Get-ChildItem $PipelineDir.FullName -Recurse | Where-Object {
-    $_.FullName -notmatch "\\examples\\" -and
-    $_.Extension -ne ".scad" -and
-    $_.FullName -notmatch "(?:^|[\\/])LICENSE$"
+    $_.FullName -notmatch &quot;\\examples\\&quot; -and
+    $_.Extension -ne &quot;.scad&quot; -and
+    $_.FullName -notmatch &quot;(?:^|[\\/])LICENSE$&quot;
 } | ForEach-Object {
     $target = $_.FullName.Replace($PipelineDir.FullName, (Get-Location).Path)
     New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
     Copy-Item $_.FullName $target -Force
 }
 
-Copy-Item (Join-Path $PipelineDir.FullName "README.md") (Join-Path (Get-Location).Path "README_pipeline.md") -Force
-if (Test-Path "README_template.md") {
-  Move-Item "README_template.md" "README.md" -Force
+Copy-Item (Join-Path $PipelineDir.FullName &quot;README.md&quot;) (Join-Path (Get-Location).Path &quot;README_pipeline.md&quot;) -Force
+if (Test-Path &quot;README_template.md&quot;) {
+  Move-Item &quot;README_template.md&quot; &quot;README.md&quot; -Force
 }
 
-New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
+New-Item -ItemType Directory -Path &quot;src/assets&quot;,&quot;src/config&quot;,&quot;src/lib&quot;,&quot;src/models&quot; -Force | Out-Null
 
 Remove-Item $Temp -Recurse -Force
-Write-Host "SCADPipeline updated."
-```
-
----
-
-### Step 2 — Pull SCADPipeline into your project
-
-Run the script from your project root:
-
-**macOS / Linux**
-
-```bash
-./get_pipeline.sh
-```
-
-**Windows**
-
-```powershell
-.\get_pipeline.ps1
-```
-
-This copies all CI/CD, viewer, and build logic from SCADPipeline into your project.
-
-Your own `.scad` models are not touched.
-
----
-
-### Step 3 — Commit the pipeline into your repo
-
-After pulling the pipeline, commit the files:
-
-```bash
-git add .
-git commit -m "Add SCADPipeline build system"
-```
-
-Your project now has a frozen, reproducible version of the SCADPipeline.
-
----
-
-### Updating the pipeline later
-
-Whenever you want the latest version:
-
-```bash
-./get_pipeline.sh
+Write-Host &quot;SCADPipeline updated.&quot;
+</code></pre>
+<hr />
+<h3>Step 2 — Pull SCADPipeline into your project</h3>
+<p>Run the script from your project root:</p>
+<p><strong>macOS / Linux</strong></p>
+<pre><code class="language-bash">./get_pipeline.sh
+</code></pre>
+<p><strong>Windows</strong></p>
+<pre><code class="language-powershell">.\get_pipeline.ps1
+</code></pre>
+<p>This copies all CI/CD, viewer, and build logic from SCADPipeline into your project.</p>
+<p>Your own <code>.scad</code> models are not touched.</p>
+<hr />
+<h3>Step 3 — Commit the pipeline into your repo</h3>
+<p>After pulling the pipeline, commit the files:</p>
+<pre><code class="language-bash">git add .
+git commit -m &quot;Add SCADPipeline build system&quot;
+</code></pre>
+<p>Your project now has a frozen, reproducible version of the SCADPipeline.</p>
+<hr />
+<h3>Updating the pipeline later</h3>
+<p>Whenever you want the latest version:</p>
+<pre><code class="language-bash">./get_pipeline.sh
 # or
 .\get_pipeline.ps1
-```
-
-Then commit the changes.
-
-This gives you **opt-in upgrades** — no breaking changes unless you choose them.
-
----
-
-### Why this is better than forking
-
-Forks rot.
+</code></pre>
+<p>Then commit the changes.</p>
+<p>This gives you <strong>opt-in upgrades</strong> — no breaking changes unless you choose them.</p>
+<hr />
+<h3>Why this is better than forking</h3>
+<p>Forks rot.
 Submodules confuse people.
-Monorepos tangle unrelated designs.
-
-This approach gives you:
-
-• Full isolation per design
+Monorepos tangle unrelated designs.</p>
+<p>This approach gives you:</p>
+<p>• Full isolation per design
 • Reproducible builds
 • Zero Git coupling
 • CI/CD that just works
-• A real pipeline you can version
-
-SCADPipeline becomes your **OpenSCAD toolchain**, not your project’s parent.
-
----
-
-## Releases
-
-Each successful build on `main` creates a GitHub Release with:
-
-* A versioned tag
-* Generated STL files attached as assets
-
-## GitHub Pages
-
-This build pipeline includes a viewer that publishes your model objects to GitHub Pages.
-
-GitHub Pages is a free hosting service for static sites. It needs to be enabled for each repo (it is off by default).
-
-**Optional (guided, console-only auth supported):**
-
-```bash
-./pipeline.sh create-github
-```
-
-```powershell
-./pipeline.ps1 create-github
-```
-
-The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
-
-If GitHub Actions is disabled in the new repo, enable it here:
-
-```
-https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/actions
-```
-
-After GitHub Actions publishes the `gh-pages` branch, enable Pages here:
-
-```
-https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/pages
-```
-
-1. Go to your repository **Settings**.
-2. Select **Pages** in the left nav.
-3. Under **Source**, choose **Deploy from a Branch**.
-4. Select the `gh-pages` branch and `/ (root)` as the folder.
-5. Click **Save**. Within a few minutes, your viewer (with compiled STLs) will be live.
-
----
-
-## License
-
-This repository is licensed under the MIT License. OpenSCAD models (`src/models/`) and pre-built assets (`src/assets/`) may be governed by their own licenses; check each asset before reuse.
-
----
-
-## Why this matters
-
-This repository demonstrates a simple but powerful idea:
-
-&gt; **Geometry can be built, versioned, reviewed, and published the same way software is.**
-
-Once you remove the GUI dependency, CAD becomes:
-
-* Automatable
-* Reviewable
-* Reproducible
-* Shareable
-
-That’s the real product here.
-</pre></section>
+• A real pipeline you can version</p>
+<p>SCADPipeline becomes your <strong>OpenSCAD toolchain</strong>, not your project’s parent.</p>
+<hr />
+<h2>Releases</h2>
+<p>Each successful build on <code>main</code> creates a GitHub Release with:</p>
+<ul>
+<li>A versioned tag</li>
+<li>Generated STL files attached as assets</li>
+</ul>
+<h2>GitHub Pages</h2>
+<p>This build pipeline includes a viewer that publishes your model objects to GitHub Pages.</p>
+<p>GitHub Pages is a free hosting service for static sites. It needs to be enabled for each repo (it is off by default).</p>
+<p><strong>Optional (guided, console-only auth supported):</strong></p>
+<pre><code class="language-bash">./pipeline.sh create-github
+</code></pre>
+<pre><code class="language-powershell">./pipeline.ps1 create-github
+</code></pre>
+<p>The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing <code>origin</code> remote.</p>
+<p>If GitHub Actions is disabled in the new repo, enable it here:</p>
+<pre><code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/actions
+</code></pre>
+<p>After GitHub Actions publishes the <code>gh-pages</code> branch, enable Pages here:</p>
+<pre><code>https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/pages
+</code></pre>
+<ol>
+<li>Go to your repository <strong>Settings</strong>.</li>
+<li>Select <strong>Pages</strong> in the left nav.</li>
+<li>Under <strong>Source</strong>, choose <strong>Deploy from a Branch</strong>.</li>
+<li>Select the <code>gh-pages</code> branch and <code>/ (root)</code> as the folder.</li>
+<li>Click <strong>Save</strong>. Within a few minutes, your viewer (with compiled STLs) will be live.</li>
+</ol>
+<hr />
+<h2>License</h2>
+<p>This repository is licensed under the MIT License. OpenSCAD models (<code>src/models/</code>) and pre-built assets (<code>src/assets/</code>) may be governed by their own licenses; check each asset before reuse.</p>
+<hr />
+<h2>Why this matters</h2>
+<p>This repository demonstrates a simple but powerful idea:</p>
+<blockquote>
+<p><strong>Geometry can be built, versioned, reviewed, and published the same way software is.</strong></p>
+</blockquote>
+<p>Once you remove the GUI dependency, CAD becomes:</p>
+<ul>
+<li>Automatable</li>
+<li>Reviewable</li>
+<li>Reproducible</li>
+<li>Shareable</li>
+</ul>
+<p>That’s the real product here.</p></section>
   </section>
   <section class="tab-panel hidden" id="license-tab">
-    <!--LICENSE-->
+    <section class="license"><pre>MIT License
+
+Copyright (c) 2026 NOAMi (https://noami.us)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</pre></section>
   </section>
 </div>
 
@@ -896,418 +783,5 @@ async function init() {
 init();
 </script>
 
-<section class="readme"><pre># SCADPipeline
-
-A reusable CI/CD toolchain for OpenSCAD projects
-
-SCADPipeline turns OpenSCAD designs into a **software-style build pipeline**:
-
-* Parametric models in Git
-* Deterministic STL builds in CI
-* Web-based 3D previews
-* Versioned, downloadable releases
-
-This repository contains both a **reference implementation** (a cube and a cylinder) and the **pipeline itself**, which you can reuse across your own design projects without forking.
-
----
-
-## 3D Preview
-
-👉 **Interactive viewer:**
-[https://numberformat.github.io/SCADPipeline/](https://numberformat.github.io/SCADPipeline/)
-
-👉 **Download STL:**
-[Latest Release](https://github.com/numberformat/SCADPipeline/releases/latest)
-
-The geometry here is intentionally simple.
-The point of this repo is not the shapes — it is the **build system**.
-
----
-
-## What this repository is
-
-This project serves two roles:
-
-1. A minimal example OpenSCAD project (cube + cylinder)
-2. A production-grade pipeline that can be imported into other repositories
-
-You can browse, build, and preview this repo directly — or you can treat it as an **OpenSCAD toolchain** and pull it into your own design projects.
-
----
-
-## Design principles
-
-* **Source, not artifacts, live in Git**
-* **Generated STLs are built in CI**
-* **Pre-built assets are inputs**, committed under `src/assets/`
-* **CI is the compiler**
-* **Pages is a viewer**, not a build system
-
----
-
-## How it works
-
-* Builds run inside a Docker container with OpenSCAD preinstalled.
-* The repo is bind-mounted into the container; outputs are written to `site/`.
-* The viewer loads `site/models.json` to populate the model dropdown.
-* GitHub Actions runs the same containerized build.
-
-Everything that works locally also works in CI.
-
----
-
-## Local build (Docker only)
-
-Requirements: Docker Desktop (or Docker Engine).
-
-If you use the GitHub setup wizard, your token is saved to `~/.scadpipeline` on your host.
-When creating a classic PAT, use minimal scopes:
-- public repos only: `public_repo`
-- private repos: `repo`
-- org repos: `admin:org`
-Avoid `delete_repo` and `project` unless you explicitly need them.
-
-**macOS/Linux (bash):**
-
-```bash
-./pipeline.sh build
-```
-
-**Windows/macOS/Linux (PowerShell 7+):**
-
-```powershell
-./pipeline.ps1 build
-```
-
-Both scripts run the same Docker container and:
-
-* Create `site/`
-* Copy `docs/index.html` and `.nojekyll`
-* Append `README.md` (rendered as HTML) to the end of the viewer page
-* Render each `*.scad` in `src/models/` to `site/*.stl`
-* Copy pre-built assets from `src/assets/` into `site/assets/`
-* Render PNG previews for each STL into `site/images/` with an `_stl` suffix
-* Generate `site/models.json` for the viewer dropdown
-
-The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
-
-Preview image size defaults to `1200,900` and can be overridden with `OPENSCAD_IMAGE_SIZE` (format: `WIDTH,HEIGHT`).
-
----
-
-### Assets-only projects
-
-You can use SCADPipeline without OpenSCAD sources at all.
-
-Put your `*.stl` files in `src/assets/` and leave `src/models/` empty.
-The build will publish your pre-built STLs into the viewer with no `.scad` files required.
-
----
-
-### Run the viewer
-
-Serve the built site locally (defaults to [http://localhost:8080](http://localhost:8080); if taken, the script picks the next available port). You can override with `SITE_PORT`.
-
-```bash
-./pipeline.sh run
-```
-
-```powershell
-./pipeline.ps1 run
-```
-
----
-
-### Clean artifacts
-
-Remove all generated build output.
-
-```bash
-./pipeline.sh clean
-```
-
-```powershell
-./pipeline.ps1 clean
-```
-
----
-
-### Docker image
-
-Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
-
-If you're on Apple Silicon (arm64) and see a manifest error:
-
-```bash
-export OPENSCAD_DOCKER_PLATFORM="linux/amd64"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_PLATFORM = "linux/amd64"
-```
-
-Override the image if needed:
-
-```bash
-export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
-```
-
-The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
-
----
-
-## Using SCADPipeline in Your Own Projects (No Forking Required)
-
-SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.
-
-Instead, each design project pulls a **snapshot** of the SCADPipeline build system using a small update script.
-This gives you all of the CI/CD, viewer, and build logic — without inheriting this repository’s history or demo models.
-
-Think of SCADPipeline as a **toolchain**, not a template.
-
----
-
-### How it works
-
-SCADPipeline publishes itself as a downloadable snapshot via GitHub.
-Your project pulls that snapshot and copies the pipeline files into your repo.
-
-Your design stays yours.
-The pipeline stays updatable.
-
-You choose when to upgrade.
-
----
-
-### Step 1 — Add the update script to your project
-
-In the root of your own OpenSCAD project, add one of these:
-
-#### macOS / Linux
-
-Create `get_pipeline.sh`:
-
-```bash
-#!/usr/bin/env bash
-set -e
-
-REPO_URL="https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
-TMP_DIR="$(mktemp -d)"
-
-echo "Downloading SCADPipeline..."
-curl -L "$REPO_URL" -o "$TMP_DIR/pipeline.zip"
-
-echo "Extracting..."
-unzip -q "$TMP_DIR/pipeline.zip" -d "$TMP_DIR"
-
-PIPELINE_DIR="$(find "$TMP_DIR" -maxdepth 1 -type d -name "SCADPipeline-*")"
-
-# Copy the pipeline into this project
-rsync -av \
-  --exclude 'examples/' \
-  --exclude '*.scad' \
-  --exclude 'LICENSE' \
-  "$PIPELINE_DIR/" \
-  "./"
-
-cp "$PIPELINE_DIR/README.md" "./README_pipeline.md"
-if [ -f "./README_template.md" ]; then
-  mv "./README_template.md" "./README.md"
-fi
-
-mkdir -p src/assets src/config src/lib src/models
-
-rm -rf "$TMP_DIR"
-
-echo "SCADPipeline updated."
-```
-
-Then make it executable:
-
-```bash
-chmod +x get_pipeline.sh
-```
-
----
-
-#### Windows (PowerShell)
-
-Create `get_pipeline.ps1`:
-
-```powershell
-$RepoUrl = "https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
-$Temp = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid())
-
-Write-Host "Downloading SCADPipeline..."
-Invoke-WebRequest $RepoUrl -OutFile "$Temp\pipeline.zip"
-
-Write-Host "Extracting..."
-Expand-Archive "$Temp\pipeline.zip" "$Temp"
-
-$PipelineDir = Get-ChildItem $Temp | Where-Object { $_.Name -like "SCADPipeline-*" } | Select-Object -First 1
-
-# Copy everything except example models
-Get-ChildItem $PipelineDir.FullName -Recurse | Where-Object {
-    $_.FullName -notmatch "\\examples\\" -and
-    $_.Extension -ne ".scad" -and
-    $_.FullName -notmatch "(?:^|[\\/])LICENSE$"
-} | ForEach-Object {
-    $target = $_.FullName.Replace($PipelineDir.FullName, (Get-Location).Path)
-    New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
-    Copy-Item $_.FullName $target -Force
-}
-
-Copy-Item (Join-Path $PipelineDir.FullName "README.md") (Join-Path (Get-Location).Path "README_pipeline.md") -Force
-if (Test-Path "README_template.md") {
-  Move-Item "README_template.md" "README.md" -Force
-}
-
-New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
-
-Remove-Item $Temp -Recurse -Force
-Write-Host "SCADPipeline updated."
-```
-
----
-
-### Step 2 — Pull SCADPipeline into your project
-
-Run the script from your project root:
-
-**macOS / Linux**
-
-```bash
-./get_pipeline.sh
-```
-
-**Windows**
-
-```powershell
-.\get_pipeline.ps1
-```
-
-This copies all CI/CD, viewer, and build logic from SCADPipeline into your project.
-
-Your own `.scad` models are not touched.
-
----
-
-### Step 3 — Commit the pipeline into your repo
-
-After pulling the pipeline, commit the files:
-
-```bash
-git add .
-git commit -m "Add SCADPipeline build system"
-```
-
-Your project now has a frozen, reproducible version of the SCADPipeline.
-
----
-
-### Updating the pipeline later
-
-Whenever you want the latest version:
-
-```bash
-./get_pipeline.sh
-# or
-.\get_pipeline.ps1
-```
-
-Then commit the changes.
-
-This gives you **opt-in upgrades** — no breaking changes unless you choose them.
-
----
-
-### Why this is better than forking
-
-Forks rot.
-Submodules confuse people.
-Monorepos tangle unrelated designs.
-
-This approach gives you:
-
-• Full isolation per design
-• Reproducible builds
-• Zero Git coupling
-• CI/CD that just works
-• A real pipeline you can version
-
-SCADPipeline becomes your **OpenSCAD toolchain**, not your project’s parent.
-
----
-
-## Releases
-
-Each successful build on `main` creates a GitHub Release with:
-
-* A versioned tag
-* Generated STL files attached as assets
-
-## GitHub Pages
-
-This build pipeline includes a viewer that publishes your model objects to GitHub Pages.
-
-GitHub Pages is a free hosting service for static sites. It needs to be enabled for each repo (it is off by default).
-
-**Optional (guided, console-only auth supported):**
-
-```bash
-./pipeline.sh create-github
-```
-
-```powershell
-./pipeline.ps1 create-github
-```
-
-The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
-
-If GitHub Actions is disabled in the new repo, enable it here:
-
-```
-https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/actions
-```
-
-After GitHub Actions publishes the `gh-pages` branch, enable Pages here:
-
-```
-https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/pages
-```
-
-1. Go to your repository **Settings**.
-2. Select **Pages** in the left nav.
-3. Under **Source**, choose **Deploy from a Branch**.
-4. Select the `gh-pages` branch and `/ (root)` as the folder.
-5. Click **Save**. Within a few minutes, your viewer (with compiled STLs) will be live.
-
----
-
-## License
-
-This repository is licensed under the MIT License. OpenSCAD models (`src/models/`) and pre-built assets (`src/assets/`) may be governed by their own licenses; check each asset before reuse.
-
----
-
-## Why this matters
-
-This repository demonstrates a simple but powerful idea:
-
-&gt; **Geometry can be built, versioned, reviewed, and published the same way software is.**
-
-Once you remove the GUI dependency, CAD becomes:
-
-* Automatable
-* Reviewable
-* Reproducible
-* Shareable
-
-That’s the real product here.
-</pre></section>
 </body>
 </html>
