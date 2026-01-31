@@ -2,65 +2,260 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>OpenSCAD STL Viewer</title>
+  <title>3D Model Viewer</title>
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background: #eeeeee;
+      background: #f0f0f0;
+      height: 100%;
     }
     body {
       font-family: "Trebuchet MS", "Segoe UI", sans-serif;
       color: #222;
     }
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 10px 14px;
-      background: rgba(238, 238, 238, 0.95);
-      border-bottom: 1px solid #d6d6d6;
-      z-index: 2;
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    :root {
+      --viewer-width: min(800px, 100%);
+      --viewer-height: min(600px, 60vh);
     }
-    header label {
-      font-size: 14px;
-      letter-spacing: 0.2px;
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 0;
+      min-height: 100vh;
+      align-content: start;
+      padding: 24px;
+      box-sizing: border-box;
     }
-    select {
-      font-size: 14px;
-      padding: 6px 8px;
+    .viewer {
+      display: grid;
+      place-items: center;
+      position: relative;
+      background: #e6e6e6;
+      border-radius: 16px;
+      border: 1px solid #d2d2d2;
+      overflow: hidden;
+      height: var(--viewer-height);
+      margin: 0 18px 18px 0;
     }
-    #downloadLink {
-      font-size: 13px;
-      padding: 6px 10px;
-      border: 1px solid #c9c9c9;
-      border-radius: 6px;
+    .viewer-media {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      width: var(--viewer-width);
+      height: var(--viewer-height);
+      margin: auto;
+    }
+    .viewer img,
+    .viewer canvas {
+      width: var(--viewer-width);
+      height: var(--viewer-height);
+      object-fit: contain;
       background: #f7f7f7;
-      color: #222;
-      text-decoration: none;
     }
-    #downloadLink:hover {
-      background: #ececec;
+    .viewer canvas {
+      display: none;
     }
-    canvas {
+    .viewer.stl-mode img {
+      display: none;
+    }
+    .viewer.stl-mode canvas {
       display: block;
     }
-    #viewport {
-      position: fixed;
-      inset: 44px 0 0 0;
+    .nav-btn {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 44px;
+      border: 0;
+      background: rgba(0, 0, 0, 0.08);
+      color: #111;
+      font-size: 28px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      z-index: 3;
     }
-    #status {
-      font-size: 12px;
+    .nav-btn:hover {
+      background: rgba(0, 0, 0, 0.14);
+    }
+    .nav-left { left: 0; }
+    .nav-right { right: 0; }
+    .toggle-btn {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #c9c9c9;
+      background: #f7f7f7;
+      cursor: pointer;
+      font-size: 13px;
+      z-index: 3;
+    }
+    .toggle-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .download-btn {
+      position: absolute;
+      right: 86px;
+      top: 18px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #c9c9c9;
+      background: #f7f7f7;
+      color: #111;
+      text-decoration: none;
+      font-size: 13px;
+      z-index: 3;
+    }
+    .download-btn.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .thumbs {
+      background: #ffffff;
+      border: 1px solid #d2d2d2;
+      border-radius: 16px;
+      padding: 10px;
+      overflow-y: auto;
+      margin: 0 0 18px 18px;
+    }
+    .thumbs h2 {
+      margin: 6px 6px 12px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       opacity: 0.7;
+    }
+    .thumbs button {
+      display: block;
+      width: 100%;
+      border: 0;
+      padding: 6px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .thumbs img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid transparent;
+    }
+    .thumbs button.active img {
+      border-color: #111;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.6;
+      text-align: center;
+    }
+    @media (max-width: 1100px) {
+      .page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+      :root {
+        --viewer-height: min(60vh, 480px);
+      }
+      .thumbs {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        margin: 0 0 18px 0;
+      }
+      .thumbs h2 {
+        margin: 0 10px 0 6px;
+        white-space: nowrap;
+      }
+      #thumbList {
+        display: flex;
+        gap: 8px;
+      }
+      .thumbs button {
+        width: 140px;
+        flex: 0 0 auto;
+      }
+      .thumbs img {
+        height: 90px;
+      }
+    }
+    .readme {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: 0;
+    }
+    .tabs {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 6px;
+      margin-top: 18px;
+      border-bottom: 1px solid #d2d2d2;
+    }
+    .tab-btn {
+      border: 1px solid #d2d2d2;
+      border-bottom: 0;
+      background: #efefef;
+      padding: 8px 14px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #111;
+      border-color: #d2d2d2;
+    }
+    .tab-panel {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin: 0 0 48px;
+      padding: 24px;
+      background: #ffffff;
+      border: 1px solid #d2d2d2;
+      border-radius: 0 16px 16px 16px;
+      box-sizing: border-box;
+      color: #222;
+    }
+    .tab-panel.hidden {
+      display: none;
+    }
+    .page-title {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      font-size: 28px;
+      letter-spacing: 0.4px;
+    }
+    .build-date {
+      grid-column: 1 / -1;
+      margin: 6px 0 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      opacity: 0.6;
+    }
+    .readme h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+    }
+    .readme pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #f7f7f7;
+      padding: 12px 14px;
+      border-radius: 10px;
+      overflow: auto;
     }
   </style>
 
-  <!-- Import map required for Three.js example modules -->
   <script type="importmap">
   {
     "imports": {
@@ -72,29 +267,472 @@
 
 <body>
 
-<header>
-  <label for="modelSelect">Model</label>
-  <select id="modelSelect"></select>
-  <a id="downloadLink" href="#" download>Download STL</a>
-  <span id="status"></span>
-</header>
+<div class="page">
+  <!--PAGE_TITLE-->
+  <div class="viewer" id="viewer">
+    <button class="nav-btn nav-left" id="prevBtn" aria-label="Previous image">◀</button>
+    <div class="viewer-media" id="viewerMedia">
+      <img id="mainImage" alt="Selected preview" />
+    </div>
+    <button class="nav-btn nav-right" id="nextBtn" aria-label="Next image">▶</button>
+    <a class="download-btn" id="downloadLink" href="#" download>Download STL</a>
+    <button class="toggle-btn" id="toggleViewer" disabled>3D</button>
+  </div>
+  <aside class="thumbs">
+    <h2>&nbsp;</h2>
+    <div id="thumbList"></div>
+    <div class="status" id="status"></div>
+  </aside>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="readme">README</button>
+    <button class="tab-btn" data-tab="license">LICENSE</button>
+  </div>
+  <section class="tab-panel" id="readme-tab">
+<section class="readme"><pre># SCADPipeline
 
-<div id="viewport"></div>
+A reusable CI/CD toolchain for OpenSCAD projects
+
+SCADPipeline turns OpenSCAD designs into a **software-style build pipeline**:
+
+* Parametric models in Git
+* Deterministic STL builds in CI
+* Web-based 3D previews
+* Versioned, downloadable releases
+
+This repository contains both a **reference implementation** (a cube and a cylinder) and the **pipeline itself**, which you can reuse across your own design projects without forking.
+
+---
+
+## 3D Preview
+
+👉 **Interactive viewer:**
+[https://numberformat.github.io/SCADPipeline/](https://numberformat.github.io/SCADPipeline/)
+
+👉 **Download STL:**
+[Latest Release](https://github.com/numberformat/SCADPipeline/releases/latest)
+
+The geometry here is intentionally simple.
+The point of this repo is not the shapes — it is the **build system**.
+
+---
+
+## What this repository is
+
+This project serves two roles:
+
+1. A minimal example OpenSCAD project (cube + cylinder)
+2. A production-grade pipeline that can be imported into other repositories
+
+You can browse, build, and preview this repo directly — or you can treat it as an **OpenSCAD toolchain** and pull it into your own design projects.
+
+---
+
+## Design principles
+
+* **Source, not artifacts, live in Git**
+* **Generated STLs are built in CI**
+* **Pre-built assets are inputs**, committed under `src/assets/`
+* **CI is the compiler**
+* **Pages is a viewer**, not a build system
+
+---
+
+## How it works
+
+* Builds run inside a Docker container with OpenSCAD preinstalled.
+* The repo is bind-mounted into the container; outputs are written to `site/`.
+* The viewer loads `site/models.json` to populate the model dropdown.
+* GitHub Actions runs the same containerized build.
+
+Everything that works locally also works in CI.
+
+---
+
+## Local build (Docker only)
+
+Requirements: Docker Desktop (or Docker Engine).
+
+If you use the GitHub setup wizard, your token is saved to `~/.scadpipeline` on your host.
+When creating a classic PAT, use minimal scopes:
+- public repos only: `public_repo`
+- private repos: `repo`
+- org repos: `admin:org`
+Avoid `delete_repo` and `project` unless you explicitly need them.
+
+**macOS/Linux (bash):**
+
+```bash
+./pipeline.sh build
+```
+
+**Windows/macOS/Linux (PowerShell 7+):**
+
+```powershell
+./pipeline.ps1 build
+```
+
+Both scripts run the same Docker container and:
+
+* Create `site/`
+* Copy `docs/index.html` and `.nojekyll`
+* Append `README.md` (rendered as HTML) to the end of the viewer page
+* Render each `*.scad` in `src/models/` to `site/*.stl`
+* Copy pre-built assets from `src/assets/` into `site/assets/`
+* Render PNG previews for each STL into `site/images/` with an `_stl` suffix
+* Generate `site/models.json` for the viewer dropdown
+
+The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
+
+Preview image size defaults to `1200,900` and can be overridden with `OPENSCAD_IMAGE_SIZE` (format: `WIDTH,HEIGHT`).
+
+---
+
+### Assets-only projects
+
+You can use SCADPipeline without OpenSCAD sources at all.
+
+Put your `*.stl` files in `src/assets/` and leave `src/models/` empty.
+The build will publish your pre-built STLs into the viewer with no `.scad` files required.
+
+---
+
+### Run the viewer
+
+Serve the built site locally (defaults to [http://localhost:8080](http://localhost:8080); if taken, the script picks the next available port). You can override with `SITE_PORT`.
+
+```bash
+./pipeline.sh run
+```
+
+```powershell
+./pipeline.ps1 run
+```
+
+---
+
+### Clean artifacts
+
+Remove all generated build output.
+
+```bash
+./pipeline.sh clean
+```
+
+```powershell
+./pipeline.ps1 clean
+```
+
+---
+
+### Docker image
+
+Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
+
+If you're on Apple Silicon (arm64) and see a manifest error:
+
+```bash
+export OPENSCAD_DOCKER_PLATFORM="linux/amd64"
+```
+
+```powershell
+$env:OPENSCAD_DOCKER_PLATFORM = "linux/amd64"
+```
+
+Override the image if needed:
+
+```bash
+export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
+```
+
+```powershell
+$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
+```
+
+The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
+
+---
+
+## Using SCADPipeline in Your Own Projects (No Forking Required)
+
+SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.
+
+Instead, each design project pulls a **snapshot** of the SCADPipeline build system using a small update script.
+This gives you all of the CI/CD, viewer, and build logic — without inheriting this repository’s history or demo models.
+
+Think of SCADPipeline as a **toolchain**, not a template.
+
+---
+
+### How it works
+
+SCADPipeline publishes itself as a downloadable snapshot via GitHub.
+Your project pulls that snapshot and copies the pipeline files into your repo.
+
+Your design stays yours.
+The pipeline stays updatable.
+
+You choose when to upgrade.
+
+---
+
+### Step 1 — Add the update script to your project
+
+In the root of your own OpenSCAD project, add one of these:
+
+#### macOS / Linux
+
+Create `get_pipeline.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+REPO_URL="https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
+TMP_DIR="$(mktemp -d)"
+
+echo "Downloading SCADPipeline..."
+curl -L "$REPO_URL" -o "$TMP_DIR/pipeline.zip"
+
+echo "Extracting..."
+unzip -q "$TMP_DIR/pipeline.zip" -d "$TMP_DIR"
+
+PIPELINE_DIR="$(find "$TMP_DIR" -maxdepth 1 -type d -name "SCADPipeline-*")"
+
+# Copy the pipeline into this project
+rsync -av \
+  --exclude 'examples/' \
+  --exclude '*.scad' \
+  --exclude 'LICENSE' \
+  "$PIPELINE_DIR/" \
+  "./"
+
+cp "$PIPELINE_DIR/README.md" "./README_pipeline.md"
+if [ -f "./README_template.md" ]; then
+  mv "./README_template.md" "./README.md"
+fi
+
+mkdir -p src/assets src/config src/lib src/models
+
+rm -rf "$TMP_DIR"
+
+echo "SCADPipeline updated."
+```
+
+Then make it executable:
+
+```bash
+chmod +x get_pipeline.sh
+```
+
+---
+
+#### Windows (PowerShell)
+
+Create `get_pipeline.ps1`:
+
+```powershell
+$RepoUrl = "https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
+$Temp = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid())
+
+Write-Host "Downloading SCADPipeline..."
+Invoke-WebRequest $RepoUrl -OutFile "$Temp\pipeline.zip"
+
+Write-Host "Extracting..."
+Expand-Archive "$Temp\pipeline.zip" "$Temp"
+
+$PipelineDir = Get-ChildItem $Temp | Where-Object { $_.Name -like "SCADPipeline-*" } | Select-Object -First 1
+
+# Copy everything except example models
+Get-ChildItem $PipelineDir.FullName -Recurse | Where-Object {
+    $_.FullName -notmatch "\\examples\\" -and
+    $_.Extension -ne ".scad" -and
+    $_.FullName -notmatch "(?:^|[\\/])LICENSE$"
+} | ForEach-Object {
+    $target = $_.FullName.Replace($PipelineDir.FullName, (Get-Location).Path)
+    New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
+    Copy-Item $_.FullName $target -Force
+}
+
+Copy-Item (Join-Path $PipelineDir.FullName "README.md") (Join-Path (Get-Location).Path "README_pipeline.md") -Force
+if (Test-Path "README_template.md") {
+  Move-Item "README_template.md" "README.md" -Force
+}
+
+New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
+
+Remove-Item $Temp -Recurse -Force
+Write-Host "SCADPipeline updated."
+```
+
+---
+
+### Step 2 — Pull SCADPipeline into your project
+
+Run the script from your project root:
+
+**macOS / Linux**
+
+```bash
+./get_pipeline.sh
+```
+
+**Windows**
+
+```powershell
+.\get_pipeline.ps1
+```
+
+This copies all CI/CD, viewer, and build logic from SCADPipeline into your project.
+
+Your own `.scad` models are not touched.
+
+---
+
+### Step 3 — Commit the pipeline into your repo
+
+After pulling the pipeline, commit the files:
+
+```bash
+git add .
+git commit -m "Add SCADPipeline build system"
+```
+
+Your project now has a frozen, reproducible version of the SCADPipeline.
+
+---
+
+### Updating the pipeline later
+
+Whenever you want the latest version:
+
+```bash
+./get_pipeline.sh
+# or
+.\get_pipeline.ps1
+```
+
+Then commit the changes.
+
+This gives you **opt-in upgrades** — no breaking changes unless you choose them.
+
+---
+
+### Why this is better than forking
+
+Forks rot.
+Submodules confuse people.
+Monorepos tangle unrelated designs.
+
+This approach gives you:
+
+• Full isolation per design
+• Reproducible builds
+• Zero Git coupling
+• CI/CD that just works
+• A real pipeline you can version
+
+SCADPipeline becomes your **OpenSCAD toolchain**, not your project’s parent.
+
+---
+
+## Releases
+
+Each successful build on `main` creates a GitHub Release with:
+
+* A versioned tag
+* Generated STL files attached as assets
+
+## GitHub Pages
+
+This build pipeline includes a viewer that publishes your model objects to GitHub Pages.
+
+GitHub Pages is a free hosting service for static sites. It needs to be enabled for each repo (it is off by default).
+
+**Optional (guided, console-only auth supported):**
+
+```bash
+./pipeline.sh create-github
+```
+
+```powershell
+./pipeline.ps1 create-github
+```
+
+The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
+
+If GitHub Actions is disabled in the new repo, enable it here:
+
+```
+https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/actions
+```
+
+After GitHub Actions publishes the `gh-pages` branch, enable Pages here:
+
+```
+https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/pages
+```
+
+1. Go to your repository **Settings**.
+2. Select **Pages** in the left nav.
+3. Under **Source**, choose **Deploy from a Branch**.
+4. Select the `gh-pages` branch and `/ (root)` as the folder.
+5. Click **Save**. Within a few minutes, your viewer (with compiled STLs) will be live.
+
+---
+
+## License
+
+This repository is licensed under the MIT License. OpenSCAD models (`src/models/`) and pre-built assets (`src/assets/`) may be governed by their own licenses; check each asset before reuse.
+
+---
+
+## Why this matters
+
+This repository demonstrates a simple but powerful idea:
+
+&gt; **Geometry can be built, versioned, reviewed, and published the same way software is.**
+
+Once you remove the GUI dependency, CAD becomes:
+
+* Automatable
+* Reviewable
+* Reproducible
+* Shareable
+
+That’s the real product here.
+</pre></section>
+  </section>
+  <section class="tab-panel hidden" id="license-tab">
+    <!--LICENSE-->
+  </section>
+</div>
 
 <script type="module">
 import * as THREE from "three";
 import { STLLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
+const mainImage = document.getElementById("mainImage");
+const thumbList = document.getElementById("thumbList");
 const statusEl = document.getElementById("status");
-const modelSelect = document.getElementById("modelSelect");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const toggleBtn = document.getElementById("toggleViewer");
 const downloadLink = document.getElementById("downloadLink");
+const viewer = document.getElementById("viewer");
+const viewerMedia = document.getElementById("viewerMedia");
+const tabButtons = [...document.querySelectorAll(".tab-btn")];
+const readmeTab = document.getElementById("readme-tab");
+const licenseTab = document.getElementById("license-tab");
 
-/* Scene */
+let images = [];
+let current = 0;
+let stlMode = false;
+
+/* Three.js viewer */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xf7f7f7);
 
-/* Camera */
 const camera = new THREE.PerspectiveCamera(
   60,
   window.innerWidth / window.innerHeight,
@@ -103,53 +741,102 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(40, 40, 40);
 
-/* Renderer */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-document.getElementById("viewport").appendChild(renderer.domElement);
+viewerMedia.appendChild(renderer.domElement);
 
-/* Controls */
 new OrbitControls(camera, renderer.domElement);
-
-/* Lighting — OpenSCAD-like (flat + readable) */
 scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.4);
 dirLight.position.set(2, 3, 4);
 scene.add(dirLight);
 
-/* Load STL */
 const loader = new STLLoader();
 let currentMesh = null;
 let currentEdges = null;
 
 function setStatus(message) {
-  statusEl.textContent = message;
+  statusEl.textContent = message || "";
 }
 
-function loadModel(stlPath) {
-  setStatus("Loading…");
-  downloadLink.href = stlPath;
-  downloadLink.setAttribute("download", stlPath);
+function setTab(name) {
+  tabButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === name);
+  });
+  readmeTab.classList.toggle("hidden", name !== "readme");
+  licenseTab.classList.toggle("hidden", name !== "license");
+}
+
+function setActive(index) {
+  current = index;
+  const item = images[current];
+  mainImage.src = item.src;
+  stlMode = false;
+  viewer.classList.remove("stl-mode");
+  toggleBtn.textContent = "3D";
+  toggleBtn.disabled = !item.stl;
+  if (item.stl) {
+    downloadLink.href = item.stl;
+    downloadLink.classList.remove("disabled");
+  } else {
+    downloadLink.href = "#";
+    downloadLink.classList.add("disabled");
+  }
+  [...thumbList.querySelectorAll("button")].forEach((btn, i) => {
+    btn.classList.toggle("active", i === current);
+  });
+}
+
+function buildThumbs() {
+  thumbList.innerHTML = "";
+  images.forEach((item, i) => {
+    const btn = document.createElement("button");
+    const img = document.createElement("img");
+    img.src = item.src;
+    img.alt = `Thumbnail ${i + 1}`;
+    btn.addEventListener("click", () => setActive(i));
+    btn.appendChild(img);
+    thumbList.appendChild(btn);
+  });
+}
+
+function next() {
+  if (!images.length) return;
+  setActive((current + 1) % images.length);
+}
+
+function prev() {
+  if (!images.length) return;
+  setActive((current - 1 + images.length) % images.length);
+}
+
+prevBtn.addEventListener("click", prev);
+nextBtn.addEventListener("click", next);
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowRight") next();
+  if (event.key === "ArrowLeft") prev();
+});
+
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => setTab(btn.dataset.tab));
+});
+
+function loadStl(stlPath) {
+  setStatus("Loading STL...");
   loader.load(
     stlPath,
     geometry => {
       geometry.center();
-
       if (currentMesh) scene.remove(currentMesh);
       if (currentEdges) scene.remove(currentEdges);
-
       const material = new THREE.MeshStandardMaterial({
-        color: 0xffff66,   // OpenSCAD warm yellow
+        color: 0xffff66,
         metalness: 0.0,
         roughness: 0.9
       });
-
       currentMesh = new THREE.Mesh(geometry, material);
       scene.add(currentMesh);
-
-      /* Optional OpenSCAD-style edge outline */
       const edges = new THREE.EdgesGeometry(geometry);
       currentEdges = new THREE.LineSegments(
         edges,
@@ -163,46 +850,464 @@ function loadModel(stlPath) {
   );
 }
 
-async function initModels() {
-  try {
-    const res = await fetch("models.json");
-    const models = await res.json();
-    if (!Array.isArray(models) || models.length === 0) throw new Error("empty");
-
-    for (const file of models) {
-      const label = file.replace(/\.stl$/i, "");
-      const option = document.createElement("option");
-      option.value = file;
-      option.textContent = label;
-      modelSelect.appendChild(option);
-    }
-
-    loadModel(models[0]);
-  } catch {
-    modelSelect.innerHTML = '<option value="cube.stl">cube</option>';
-    loadModel("cube.stl");
-  }
+function toggleViewer() {
+  const item = images[current];
+  if (!item.stl) return;
+  stlMode = !stlMode;
+  viewer.classList.toggle("stl-mode", stlMode);
+  toggleBtn.textContent = stlMode ? "Image" : "3D";
+  if (stlMode) loadStl(item.stl);
 }
 
-modelSelect.addEventListener("change", () => {
-  loadModel(modelSelect.value);
-});
+toggleBtn.addEventListener("click", toggleViewer);
 
-/* Resize handling */
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+function resize() {
+  const rect = viewerMedia.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  if (width === 0 || height === 0) return;
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  renderer.setSize(width, height);
+}
 
-/* Render loop */
+window.addEventListener("resize", resize);
+
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
 animate();
-initModels();
+
+async function init() {
+  try {
+    const res = await fetch("images.json");
+    images = await res.json();
+    if (!Array.isArray(images) || images.length === 0) throw new Error("empty");
+    buildThumbs();
+    setActive(0);
+    resize();
+    setTab("readme");
+  } catch (err) {
+    setStatus("No images found.");
+  }
+}
+
+init();
 </script>
 
+<section class="readme"><pre># SCADPipeline
+
+A reusable CI/CD toolchain for OpenSCAD projects
+
+SCADPipeline turns OpenSCAD designs into a **software-style build pipeline**:
+
+* Parametric models in Git
+* Deterministic STL builds in CI
+* Web-based 3D previews
+* Versioned, downloadable releases
+
+This repository contains both a **reference implementation** (a cube and a cylinder) and the **pipeline itself**, which you can reuse across your own design projects without forking.
+
+---
+
+## 3D Preview
+
+👉 **Interactive viewer:**
+[https://numberformat.github.io/SCADPipeline/](https://numberformat.github.io/SCADPipeline/)
+
+👉 **Download STL:**
+[Latest Release](https://github.com/numberformat/SCADPipeline/releases/latest)
+
+The geometry here is intentionally simple.
+The point of this repo is not the shapes — it is the **build system**.
+
+---
+
+## What this repository is
+
+This project serves two roles:
+
+1. A minimal example OpenSCAD project (cube + cylinder)
+2. A production-grade pipeline that can be imported into other repositories
+
+You can browse, build, and preview this repo directly — or you can treat it as an **OpenSCAD toolchain** and pull it into your own design projects.
+
+---
+
+## Design principles
+
+* **Source, not artifacts, live in Git**
+* **Generated STLs are built in CI**
+* **Pre-built assets are inputs**, committed under `src/assets/`
+* **CI is the compiler**
+* **Pages is a viewer**, not a build system
+
+---
+
+## How it works
+
+* Builds run inside a Docker container with OpenSCAD preinstalled.
+* The repo is bind-mounted into the container; outputs are written to `site/`.
+* The viewer loads `site/models.json` to populate the model dropdown.
+* GitHub Actions runs the same containerized build.
+
+Everything that works locally also works in CI.
+
+---
+
+## Local build (Docker only)
+
+Requirements: Docker Desktop (or Docker Engine).
+
+If you use the GitHub setup wizard, your token is saved to `~/.scadpipeline` on your host.
+When creating a classic PAT, use minimal scopes:
+- public repos only: `public_repo`
+- private repos: `repo`
+- org repos: `admin:org`
+Avoid `delete_repo` and `project` unless you explicitly need them.
+
+**macOS/Linux (bash):**
+
+```bash
+./pipeline.sh build
+```
+
+**Windows/macOS/Linux (PowerShell 7+):**
+
+```powershell
+./pipeline.ps1 build
+```
+
+Both scripts run the same Docker container and:
+
+* Create `site/`
+* Copy `docs/index.html` and `.nojekyll`
+* Append `README.md` (rendered as HTML) to the end of the viewer page
+* Render each `*.scad` in `src/models/` to `site/*.stl`
+* Copy pre-built assets from `src/assets/` into `site/assets/`
+* Render PNG previews for each STL into `site/images/` with an `_stl` suffix
+* Generate `site/models.json` for the viewer dropdown
+
+The viewer lists both compiled STLs (from `src/models/`) and pre-built STLs (from `src/assets/`). For simplicity, the build uses **top-level files only** (no recursion).
+
+Preview image size defaults to `1200,900` and can be overridden with `OPENSCAD_IMAGE_SIZE` (format: `WIDTH,HEIGHT`).
+
+---
+
+### Assets-only projects
+
+You can use SCADPipeline without OpenSCAD sources at all.
+
+Put your `*.stl` files in `src/assets/` and leave `src/models/` empty.
+The build will publish your pre-built STLs into the viewer with no `.scad` files required.
+
+---
+
+### Run the viewer
+
+Serve the built site locally (defaults to [http://localhost:8080](http://localhost:8080); if taken, the script picks the next available port). You can override with `SITE_PORT`.
+
+```bash
+./pipeline.sh run
+```
+
+```powershell
+./pipeline.ps1 run
+```
+
+---
+
+### Clean artifacts
+
+Remove all generated build output.
+
+```bash
+./pipeline.sh clean
+```
+
+```powershell
+./pipeline.ps1 clean
+```
+
+---
+
+### Docker image
+
+Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
+
+If you're on Apple Silicon (arm64) and see a manifest error:
+
+```bash
+export OPENSCAD_DOCKER_PLATFORM="linux/amd64"
+```
+
+```powershell
+$env:OPENSCAD_DOCKER_PLATFORM = "linux/amd64"
+```
+
+Override the image if needed:
+
+```bash
+export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
+```
+
+```powershell
+$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
+```
+
+The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
+
+---
+
+## Using SCADPipeline in Your Own Projects (No Forking Required)
+
+SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.
+
+Instead, each design project pulls a **snapshot** of the SCADPipeline build system using a small update script.
+This gives you all of the CI/CD, viewer, and build logic — without inheriting this repository’s history or demo models.
+
+Think of SCADPipeline as a **toolchain**, not a template.
+
+---
+
+### How it works
+
+SCADPipeline publishes itself as a downloadable snapshot via GitHub.
+Your project pulls that snapshot and copies the pipeline files into your repo.
+
+Your design stays yours.
+The pipeline stays updatable.
+
+You choose when to upgrade.
+
+---
+
+### Step 1 — Add the update script to your project
+
+In the root of your own OpenSCAD project, add one of these:
+
+#### macOS / Linux
+
+Create `get_pipeline.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+REPO_URL="https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
+TMP_DIR="$(mktemp -d)"
+
+echo "Downloading SCADPipeline..."
+curl -L "$REPO_URL" -o "$TMP_DIR/pipeline.zip"
+
+echo "Extracting..."
+unzip -q "$TMP_DIR/pipeline.zip" -d "$TMP_DIR"
+
+PIPELINE_DIR="$(find "$TMP_DIR" -maxdepth 1 -type d -name "SCADPipeline-*")"
+
+# Copy the pipeline into this project
+rsync -av \
+  --exclude 'examples/' \
+  --exclude '*.scad' \
+  --exclude 'LICENSE' \
+  "$PIPELINE_DIR/" \
+  "./"
+
+cp "$PIPELINE_DIR/README.md" "./README_pipeline.md"
+if [ -f "./README_template.md" ]; then
+  mv "./README_template.md" "./README.md"
+fi
+
+mkdir -p src/assets src/config src/lib src/models
+
+rm -rf "$TMP_DIR"
+
+echo "SCADPipeline updated."
+```
+
+Then make it executable:
+
+```bash
+chmod +x get_pipeline.sh
+```
+
+---
+
+#### Windows (PowerShell)
+
+Create `get_pipeline.ps1`:
+
+```powershell
+$RepoUrl = "https://github.com/numberformat/SCADPipeline/archive/refs/heads/main.zip"
+$Temp = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath() + [System.Guid]::NewGuid())
+
+Write-Host "Downloading SCADPipeline..."
+Invoke-WebRequest $RepoUrl -OutFile "$Temp\pipeline.zip"
+
+Write-Host "Extracting..."
+Expand-Archive "$Temp\pipeline.zip" "$Temp"
+
+$PipelineDir = Get-ChildItem $Temp | Where-Object { $_.Name -like "SCADPipeline-*" } | Select-Object -First 1
+
+# Copy everything except example models
+Get-ChildItem $PipelineDir.FullName -Recurse | Where-Object {
+    $_.FullName -notmatch "\\examples\\" -and
+    $_.Extension -ne ".scad" -and
+    $_.FullName -notmatch "(?:^|[\\/])LICENSE$"
+} | ForEach-Object {
+    $target = $_.FullName.Replace($PipelineDir.FullName, (Get-Location).Path)
+    New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
+    Copy-Item $_.FullName $target -Force
+}
+
+Copy-Item (Join-Path $PipelineDir.FullName "README.md") (Join-Path (Get-Location).Path "README_pipeline.md") -Force
+if (Test-Path "README_template.md") {
+  Move-Item "README_template.md" "README.md" -Force
+}
+
+New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
+
+Remove-Item $Temp -Recurse -Force
+Write-Host "SCADPipeline updated."
+```
+
+---
+
+### Step 2 — Pull SCADPipeline into your project
+
+Run the script from your project root:
+
+**macOS / Linux**
+
+```bash
+./get_pipeline.sh
+```
+
+**Windows**
+
+```powershell
+.\get_pipeline.ps1
+```
+
+This copies all CI/CD, viewer, and build logic from SCADPipeline into your project.
+
+Your own `.scad` models are not touched.
+
+---
+
+### Step 3 — Commit the pipeline into your repo
+
+After pulling the pipeline, commit the files:
+
+```bash
+git add .
+git commit -m "Add SCADPipeline build system"
+```
+
+Your project now has a frozen, reproducible version of the SCADPipeline.
+
+---
+
+### Updating the pipeline later
+
+Whenever you want the latest version:
+
+```bash
+./get_pipeline.sh
+# or
+.\get_pipeline.ps1
+```
+
+Then commit the changes.
+
+This gives you **opt-in upgrades** — no breaking changes unless you choose them.
+
+---
+
+### Why this is better than forking
+
+Forks rot.
+Submodules confuse people.
+Monorepos tangle unrelated designs.
+
+This approach gives you:
+
+• Full isolation per design
+• Reproducible builds
+• Zero Git coupling
+• CI/CD that just works
+• A real pipeline you can version
+
+SCADPipeline becomes your **OpenSCAD toolchain**, not your project’s parent.
+
+---
+
+## Releases
+
+Each successful build on `main` creates a GitHub Release with:
+
+* A versioned tag
+* Generated STL files attached as assets
+
+## GitHub Pages
+
+This build pipeline includes a viewer that publishes your model objects to GitHub Pages.
+
+GitHub Pages is a free hosting service for static sites. It needs to be enabled for each repo (it is off by default).
+
+**Optional (guided, console-only auth supported):**
+
+```bash
+./pipeline.sh create-github
+```
+
+```powershell
+./pipeline.ps1 create-github
+```
+
+The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
+
+If GitHub Actions is disabled in the new repo, enable it here:
+
+```
+https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/actions
+```
+
+After GitHub Actions publishes the `gh-pages` branch, enable Pages here:
+
+```
+https://github.com/&lt;owner&gt;/&lt;repo&gt;/settings/pages
+```
+
+1. Go to your repository **Settings**.
+2. Select **Pages** in the left nav.
+3. Under **Source**, choose **Deploy from a Branch**.
+4. Select the `gh-pages` branch and `/ (root)` as the folder.
+5. Click **Save**. Within a few minutes, your viewer (with compiled STLs) will be live.
+
+---
+
+## License
+
+This repository is licensed under the MIT License. OpenSCAD models (`src/models/`) and pre-built assets (`src/assets/`) may be governed by their own licenses; check each asset before reuse.
+
+---
+
+## Why this matters
+
+This repository demonstrates a simple but powerful idea:
+
+&gt; **Geometry can be built, versioned, reviewed, and published the same way software is.**
+
+Once you remove the GUI dependency, CAD becomes:
+
+* Automatable
+* Reviewable
+* Reproducible
+* Shareable
+
+That’s the real product here.
+</pre></section>
 </body>
 </html>
