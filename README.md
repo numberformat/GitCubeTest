@@ -61,6 +61,7 @@ Everything that works locally also works in CI.
 ## Local build (Docker only)
 
 Requirements: Docker Desktop (or Docker Engine).
+The build runs in a container and auto-builds the local image as needed.
 
 If you use the GitHub setup wizard, your token is saved to `~/.scadpipeline` on your host.
 When creating a classic PAT, use minimal scopes:
@@ -134,34 +135,6 @@ Remove all generated build output.
 
 ---
 
-### Docker image
-
-Default image: `scadpipeline:latest` (auto-built from `Dockerfile` if missing)
-
-If you're on Apple Silicon (arm64) and see a manifest error:
-
-```bash
-export OPENSCAD_DOCKER_PLATFORM="linux/amd64"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_PLATFORM = "linux/amd64"
-```
-
-Override the image if needed:
-
-```bash
-export OPENSCAD_DOCKER_IMAGE="openscad/openscad:bookworm"
-```
-
-```powershell
-$env:OPENSCAD_DOCKER_IMAGE = "openscad/openscad:bookworm"
-```
-
-The default image is built from `Dockerfile` and includes ImageMagick (for `src/images` conversion) and GitHub CLI.
-
----
-
 ## Using SCADPipeline in Your Own Projects (No Forking Required)
 
 SCADPipeline is designed to be reused across many OpenSCAD design projects without forking this repository or dealing with Git submodules.
@@ -221,12 +194,14 @@ if [ -f "./README_template.md" ]; then
   mv "./README_template.md" "./README.md"
 fi
 
-mkdir -p src/assets src/config src/lib src/models
+mkdir -p src/assets src/config src/images src/lib src/models
 
 rm -rf "$TMP_DIR"
 
 echo "SCADPipeline updated."
 ```
+
+This also creates `src/images/` for optional user-provided images.
 
 Then make it executable:
 
@@ -268,11 +243,13 @@ if (Test-Path "README_template.md") {
   Move-Item "README_template.md" "README.md" -Force
 }
 
-New-Item -ItemType Directory -Path "src/assets","src/config","src/lib","src/models" -Force | Out-Null
+New-Item -ItemType Directory -Path "src/assets","src/config","src/images","src/lib","src/models" -Force | Out-Null
 
 Remove-Item $Temp -Recurse -Force
 Write-Host "SCADPipeline updated."
 ```
+
+This also creates `src/images/` for optional user-provided images.
 
 ---
 
