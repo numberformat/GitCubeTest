@@ -2,65 +2,190 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>OpenSCAD STL Viewer</title>
+  <title>SCADPipeline Viewer</title>
 
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background: #eeeeee;
+      background: #f0f0f0;
+      height: 100%;
     }
     body {
       font-family: "Trebuchet MS", "Segoe UI", sans-serif;
       color: #222;
     }
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 10px 14px;
-      background: rgba(238, 238, 238, 0.95);
-      border-bottom: 1px solid #d6d6d6;
-      z-index: 2;
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    :root {
+      --viewer-width: min(800px, 100%);
+      --viewer-height: min(600px, 60vh);
     }
-    header label {
-      font-size: 14px;
-      letter-spacing: 0.2px;
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 18px;
+      min-height: 100vh;
+      align-content: start;
+      padding: 24px;
+      box-sizing: border-box;
     }
-    select {
-      font-size: 14px;
-      padding: 6px 8px;
+    .viewer {
+      display: grid;
+      place-items: center;
+      position: relative;
+      background: #e6e6e6;
+      border-radius: 16px;
+      border: 1px solid #d2d2d2;
+      overflow: hidden;
+      height: var(--viewer-height);
     }
-    #downloadLink {
-      font-size: 13px;
-      padding: 6px 10px;
-      border: 1px solid #c9c9c9;
-      border-radius: 6px;
+    .viewer-media {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      width: var(--viewer-width);
+      height: var(--viewer-height);
+      margin: auto;
+    }
+    .viewer img,
+    .viewer canvas {
+      width: var(--viewer-width);
+      height: var(--viewer-height);
+      object-fit: contain;
       background: #f7f7f7;
-      color: #222;
-      text-decoration: none;
     }
-    #downloadLink:hover {
-      background: #ececec;
+    .viewer canvas {
+      display: none;
     }
-    canvas {
+    .viewer.stl-mode img {
+      display: none;
+    }
+    .viewer.stl-mode canvas {
       display: block;
     }
-    #viewport {
-      position: fixed;
-      inset: 44px 0 0 0;
+    .nav-btn {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 44px;
+      border: 0;
+      background: rgba(0, 0, 0, 0.08);
+      color: #111;
+      font-size: 28px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      z-index: 3;
     }
-    #status {
-      font-size: 12px;
+    .nav-btn:hover {
+      background: rgba(0, 0, 0, 0.14);
+    }
+    .nav-left { left: 0; }
+    .nav-right { right: 0; }
+    .toggle-btn {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #c9c9c9;
+      background: #f7f7f7;
+      cursor: pointer;
+      font-size: 13px;
+      z-index: 3;
+    }
+    .toggle-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .download-btn {
+      position: absolute;
+      right: 86px;
+      top: 18px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #c9c9c9;
+      background: #f7f7f7;
+      color: #111;
+      text-decoration: none;
+      font-size: 13px;
+      z-index: 3;
+    }
+    .download-btn.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .thumbs {
+      background: #ffffff;
+      border: 1px solid #d2d2d2;
+      border-radius: 16px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .thumbs h2 {
+      margin: 6px 6px 12px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
       opacity: 0.7;
+    }
+    .thumbs button {
+      display: block;
+      width: 100%;
+      border: 0;
+      padding: 6px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .thumbs img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid transparent;
+    }
+    .thumbs button.active img {
+      border-color: #111;
+    }
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.6;
+      text-align: center;
+    }
+    @media (max-width: 1100px) {
+      .page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+      }
+      :root {
+        --viewer-height: min(60vh, 480px);
+      }
+      .thumbs {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+      }
+      .thumbs h2 {
+        margin: 0 10px 0 6px;
+        white-space: nowrap;
+      }
+      #thumbList {
+        display: flex;
+        gap: 8px;
+      }
+      .thumbs button {
+        width: 140px;
+        flex: 0 0 auto;
+      }
+      .thumbs img {
+        height: 90px;
+      }
     }
   </style>
 
-  <!-- Import map required for Three.js example modules -->
   <script type="importmap">
   {
     "imports": {
@@ -72,29 +197,46 @@
 
 <body>
 
-<header>
-  <label for="modelSelect">Model</label>
-  <select id="modelSelect"></select>
-  <a id="downloadLink" href="#" download>Download STL</a>
-  <span id="status"></span>
-</header>
-
-<div id="viewport"></div>
+<div class="page">
+  <div class="viewer" id="viewer">
+    <button class="nav-btn nav-left" id="prevBtn" aria-label="Previous image">◀</button>
+    <div class="viewer-media" id="viewerMedia">
+      <img id="mainImage" alt="Selected preview" />
+    </div>
+    <button class="nav-btn nav-right" id="nextBtn" aria-label="Next image">▶</button>
+    <a class="download-btn" id="downloadLink" href="#" download>Download STL</a>
+    <button class="toggle-btn" id="toggleViewer" disabled>3D</button>
+  </div>
+  <aside class="thumbs">
+    <h2>&nbsp;</h2>
+    <div id="thumbList"></div>
+    <div class="status" id="status"></div>
+  </aside>
+</div>
 
 <script type="module">
 import * as THREE from "three";
 import { STLLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/STLLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
+const mainImage = document.getElementById("mainImage");
+const thumbList = document.getElementById("thumbList");
 const statusEl = document.getElementById("status");
-const modelSelect = document.getElementById("modelSelect");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const toggleBtn = document.getElementById("toggleViewer");
 const downloadLink = document.getElementById("downloadLink");
+const viewer = document.getElementById("viewer");
+const viewerMedia = document.getElementById("viewerMedia");
 
-/* Scene */
+let images = [];
+let current = 0;
+let stlMode = false;
+
+/* Three.js viewer */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xeeeeee);
+scene.background = new THREE.Color(0xf7f7f7);
 
-/* Camera */
 const camera = new THREE.PerspectiveCamera(
   60,
   window.innerWidth / window.innerHeight,
@@ -103,53 +245,90 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(40, 40, 40);
 
-/* Renderer */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-document.getElementById("viewport").appendChild(renderer.domElement);
+viewerMedia.appendChild(renderer.domElement);
 
-/* Controls */
 new OrbitControls(camera, renderer.domElement);
-
-/* Lighting — OpenSCAD-like (flat + readable) */
 scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.4);
 dirLight.position.set(2, 3, 4);
 scene.add(dirLight);
 
-/* Load STL */
 const loader = new STLLoader();
 let currentMesh = null;
 let currentEdges = null;
 
 function setStatus(message) {
-  statusEl.textContent = message;
+  statusEl.textContent = message || "";
 }
 
-function loadModel(stlPath) {
-  setStatus("Loading…");
-  downloadLink.href = stlPath;
-  downloadLink.setAttribute("download", stlPath);
+function setActive(index) {
+  current = index;
+  const item = images[current];
+  mainImage.src = item.src;
+  stlMode = false;
+  viewer.classList.remove("stl-mode");
+  toggleBtn.textContent = "3D";
+  toggleBtn.disabled = !item.stl;
+  if (item.stl) {
+    downloadLink.href = item.stl;
+    downloadLink.classList.remove("disabled");
+  } else {
+    downloadLink.href = "#";
+    downloadLink.classList.add("disabled");
+  }
+  [...thumbList.querySelectorAll("button")].forEach((btn, i) => {
+    btn.classList.toggle("active", i === current);
+  });
+}
+
+function buildThumbs() {
+  thumbList.innerHTML = "";
+  images.forEach((item, i) => {
+    const btn = document.createElement("button");
+    const img = document.createElement("img");
+    img.src = item.src;
+    img.alt = `Thumbnail ${i + 1}`;
+    btn.addEventListener("click", () => setActive(i));
+    btn.appendChild(img);
+    thumbList.appendChild(btn);
+  });
+}
+
+function next() {
+  if (!images.length) return;
+  setActive((current + 1) % images.length);
+}
+
+function prev() {
+  if (!images.length) return;
+  setActive((current - 1 + images.length) % images.length);
+}
+
+prevBtn.addEventListener("click", prev);
+nextBtn.addEventListener("click", next);
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowRight") next();
+  if (event.key === "ArrowLeft") prev();
+});
+
+function loadStl(stlPath) {
+  setStatus("Loading STL...");
   loader.load(
     stlPath,
     geometry => {
       geometry.center();
-
       if (currentMesh) scene.remove(currentMesh);
       if (currentEdges) scene.remove(currentEdges);
-
       const material = new THREE.MeshStandardMaterial({
-        color: 0xffff66,   // OpenSCAD warm yellow
+        color: 0xffff66,
         metalness: 0.0,
         roughness: 0.9
       });
-
       currentMesh = new THREE.Mesh(geometry, material);
       scene.add(currentMesh);
-
-      /* Optional OpenSCAD-style edge outline */
       const edges = new THREE.EdgesGeometry(geometry);
       currentEdges = new THREE.LineSegments(
         edges,
@@ -163,45 +342,49 @@ function loadModel(stlPath) {
   );
 }
 
-async function initModels() {
-  try {
-    const res = await fetch("models.json");
-    const models = await res.json();
-    if (!Array.isArray(models) || models.length === 0) throw new Error("empty");
-
-    for (const file of models) {
-      const label = file.replace(/\.stl$/i, "");
-      const option = document.createElement("option");
-      option.value = file;
-      option.textContent = label;
-      modelSelect.appendChild(option);
-    }
-
-    loadModel(models[0]);
-  } catch {
-    modelSelect.innerHTML = '<option value="cube.stl">cube</option>';
-    loadModel("cube.stl");
-  }
+function toggleViewer() {
+  const item = images[current];
+  if (!item.stl) return;
+  stlMode = !stlMode;
+  viewer.classList.toggle("stl-mode", stlMode);
+  toggleBtn.textContent = stlMode ? "Image" : "3D";
+  if (stlMode) loadStl(item.stl);
 }
 
-modelSelect.addEventListener("change", () => {
-  loadModel(modelSelect.value);
-});
+toggleBtn.addEventListener("click", toggleViewer);
 
-/* Resize handling */
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+function resize() {
+  const rect = viewerMedia.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  if (width === 0 || height === 0) return;
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  renderer.setSize(width, height);
+}
 
-/* Render loop */
+window.addEventListener("resize", resize);
+
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
 animate();
-initModels();
+
+async function init() {
+  try {
+    const res = await fetch("images.json");
+    images = await res.json();
+    if (!Array.isArray(images) || images.length === 0) throw new Error("empty");
+    buildThumbs();
+    setActive(0);
+    resize();
+  } catch (err) {
+    setStatus("No images found.");
+  }
+}
+
+init();
 </script>
 
 </body>

@@ -63,13 +63,20 @@ if [ -d src/assets ]; then
   cp -R src/assets/. site/assets/
 fi
 
+printf "[" > site/images.json
+images_first=1
+
 if [ -d src/images ] && [ ${#user_images[@]} -gt 0 ]; then
   while IFS= read -r path; do
     [ -f "$path" ] || continue
     base="$(basename "$path")"
     base_no_ext="${base%.*}"
     out="site/images/${base_no_ext}.png"
-    convert_image "$path" "$out" || true
+    if convert_image "$path" "$out"; then
+      if [ $images_first -eq 0 ]; then printf "," >> site/images.json; fi
+      printf "{\"src\":\"images/%s.png\"}" "$base_no_ext" >> site/images.json
+      images_first=0
+    fi
   done < <(printf '%s\n' "${user_images[@]}" | sort -f)
 fi
 
@@ -79,7 +86,13 @@ for file in "${scad_files[@]}"; do
   base="$(basename "${file%.scad}")"
   out="site/${base}.stl"
   openscad -o "$out" "$file"
-  render_preview "$out" "site/images/${base}_stl.png"
+  preview_out="site/images/${base}_stl.png"
+  render_preview "$out" "$preview_out"
+  if [ -f "$preview_out" ]; then
+    if [ $images_first -eq 0 ]; then printf "," >> site/images.json; fi
+    printf "{\"src\":\"images/%s_stl.png\",\"stl\":\"%s.stl\"}" "$base" "$base" >> site/images.json
+    images_first=0
+  fi
   if [ $first -eq 0 ]; then printf "," >> site/models.json; fi
   printf "\"%s.stl\"" "$base" >> site/models.json
   first=0
@@ -90,8 +103,15 @@ for file in "${asset_stls[@]}"; do
   if [ $first -eq 0 ]; then printf "," >> site/models.json; fi
   printf "\"assets/%s\"" "$base" >> site/models.json
   first=0
-  render_preview "site/assets/$base" "site/images/${base_no_ext}_stl.png"
+  preview_out="site/images/${base_no_ext}_stl.png"
+  render_preview "site/assets/$base" "$preview_out"
+  if [ -f "$preview_out" ]; then
+    if [ $images_first -eq 0 ]; then printf "," >> site/images.json; fi
+    printf "{\"src\":\"images/%s_stl.png\",\"stl\":\"assets/%s\"}" "$base_no_ext" "$base" >> site/images.json
+    images_first=0
+  fi
 done
+printf "]" >> site/images.json
 printf "]" >> site/models.json
 
 echo "Build complete. Output in ./site"
