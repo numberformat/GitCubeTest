@@ -346,7 +346,7 @@ Avoid <code>delete_repo</code> and <code>project</code> unless you explicitly ne
 <pre><code class="language-bash">./pipeline.sh build
 </code></pre>
 <p><strong>Windows/macOS/Linux (PowerShell 7+):</strong></p>
-<pre><code class="language-powershell">./pipeline.ps1 build
+<pre><code class="language-powershell">.\pipeline.ps1 build
 </code></pre>
 <p>Both scripts run the same Docker container and:</p>
 <ul>
@@ -370,14 +370,14 @@ The build will publish your pre-built STLs into the viewer with no <code>.scad</
 <p>Serve the built site locally (defaults to <a href="http://localhost:8080">http://localhost:8080</a>; if taken, the script picks the next available port). You can override with <code>SITE_PORT</code>.</p>
 <pre><code class="language-bash">./pipeline.sh run
 </code></pre>
-<pre><code class="language-powershell">./pipeline.ps1 run
+<pre><code class="language-powershell">.\pipeline.ps1 run
 </code></pre>
 <hr />
 <h3>Clean artifacts</h3>
 <p>Remove all generated build output.</p>
 <pre><code class="language-bash">./pipeline.sh clean
 </code></pre>
-<pre><code class="language-powershell">./pipeline.ps1 clean
+<pre><code class="language-powershell">.\pipeline.ps1 clean
 </code></pre>
 <hr />
 <h3>Docker image</h3>
@@ -534,7 +534,7 @@ Monorepos tangle unrelated designs.</p>
 <p><strong>Optional (guided, console-only auth supported):</strong></p>
 <pre><code class="language-bash">./pipeline.sh create-github
 </code></pre>
-<pre><code class="language-powershell">./pipeline.ps1 create-github
+<pre><code class="language-powershell">.\pipeline.ps1 create-github
 </code></pre>
 <p>The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing <code>origin</code> remote.</p>
 <p>If GitHub Actions is disabled in the new repo, enable it here:</p>
@@ -565,8 +565,7 @@ Monorepos tangle unrelated designs.</p>
 <li>Reviewable</li>
 <li>Reproducible</li>
 <li>Shareable</li>
-</ul>
-<p>That’s the real product here.</p></section>
+</ul></section>
   </section>
   <section class="tab-panel hidden" id="license-tab">
     <section class="license"><pre>MIT License
