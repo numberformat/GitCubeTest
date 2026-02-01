@@ -103,4 +103,4 @@ Each build on `main` publishes STL assets as a GitHub Release.
 
 ## Pipeline
 
-This project uses the SCADPipeline build system. See the pipeline README for details and updates: [SCADPipeline README](README_pipeline.md).
+This project uses the SCADPipeline build system. See the pipeline README for details and updates: [SCADPipeline README](https://github.com/numberformat/SCADPipeline).
