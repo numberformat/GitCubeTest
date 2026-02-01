@@ -22,7 +22,7 @@ Short description of the design project.
 
 **Windows (PowerShell 7+):**
 ```powershell
-./pipeline.ps1 build
+.\pipeline.ps1 build
 ```
 
 ---
@@ -36,8 +36,10 @@ Run the local viewer:
 ```
 
 ```powershell
-./pipeline.ps1 run
+.\pipeline.ps1 run
 ```
+
+## Upload to Github and enable Pages
 
 Enable GitHub Pages to publish the viewer:
 
@@ -48,7 +50,7 @@ Optional (guided, console-only auth supported):
 ```
 
 ```powershell
-./pipeline.ps1 create-github
+.\pipeline.ps1 create-github
 ```
 
 The setup will initialize a git repo if needed, commit your current files, and ask how to handle any existing `origin` remote.
@@ -68,7 +70,7 @@ https://github.com/<owner>/<repo>/settings/pages
 Token scope guidance (classic PAT):
 - public repos only: `public_repo`
 - private repos: `repo`
-- org repos: `admin:org` 
+- org repos: `admin:org`
 Avoid `delete_repo` and `project` unless you explicitly need them.
 
 Optional (guided):
@@ -78,7 +80,7 @@ Optional (guided):
 ```
 
 ```powershell
-./pipeline.ps1 create-github
+.\pipeline.ps1 create-github
 ```
 
 1. Go to **Settings** → **Pages**
