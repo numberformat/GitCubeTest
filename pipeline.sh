@@ -260,6 +260,7 @@ case "$cmd" in
     docker run --rm "${tty_args[@]}" \
       --user 0:0 \
       "${platform_args[@]}" \
+      -e SCADPIPELINE_DEFAULT_REPO="$(basename "$root_dir")" \
       -v "${HOME}/.scadpipeline:/root/.scadpipeline" \
       -v "$root_dir:/workspace" \
       -w /workspace \

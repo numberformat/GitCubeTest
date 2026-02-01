@@ -202,7 +202,7 @@ create_repo() {
     fi
     warn "Owner is required."
   done
-  default_repo="$(basename "$(pwd)")"
+  default_repo="${SCADPIPELINE_DEFAULT_REPO:-$(basename "$(pwd)")}"
   while true; do
     repo="$(prompt "Repository name (no spaces)" "$default_repo")"
     if [ -n "$repo" ]; then
