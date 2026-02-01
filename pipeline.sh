@@ -243,7 +243,6 @@ case "$cmd" in
     cmd_run "$@"
     ;;
   create-github)
-    ensure_git_ready
     ensure_docker
     ensure_docker_image
     touch "${HOME}/.scadpipeline"
@@ -269,6 +268,31 @@ case "$cmd" in
     if [ -f "$root_dir/.scadpipeline_repo" ]; then
       repo="$(cat "$root_dir/.scadpipeline_repo" | tr -d '\r\n')"
       if [ -n "$repo" ]; then
+        owner="${repo%%/*}"
+        name="${repo#*/}"
+        pages_url="https://${owner}.github.io/${name}/"
+        if [ -f "$root_dir/README.md" ] && ! grep -q "Interactive viewer:" "$root_dir/README.md"; then
+          tmp_readme="$(mktemp "${TMPDIR:-/tmp}/readme.XXXXXX")"
+          awk -v link="👉 Interactive viewer: ${pages_url}" '
+            BEGIN { inserted = 0 }
+            {
+              print
+              if (!inserted && $0 ~ /^#[[:space:]]+/) {
+                print ""
+                print link
+                inserted = 1
+              }
+            }
+            END {
+              if (!inserted) {
+                print ""
+                print link
+              }
+            }
+          ' "$root_dir/README.md" > "$tmp_readme"
+          mv "$tmp_readme" "$root_dir/README.md"
+        fi
+        ensure_git_ready
         configure_remote "$repo"
       else
         echo "WARN: No repo name returned from GitHub setup."

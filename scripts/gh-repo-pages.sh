@@ -2,7 +2,7 @@
 # Copyright (c) 2026 NOAMi (https://noami.us)
 set -euo pipefail
 
-info() { printf "\n%s\n" "$*"; }
+info() { printf "\n%s\n" "$*" >&2; }
 warn() { printf "WARN: %s\n" "$*" >&2; }
 fail() { printf "ERROR: %s\n" "$*" >&2; exit 1; }
 
@@ -222,9 +222,9 @@ create_repo() {
     fi
   else
     if [ -n "$desc" ]; then
-      gh repo create "$full" --"$visibility" --description "$desc" --confirm
+      gh repo create "$full" --"$visibility" --description "$desc" --confirm >/dev/null
     else
-      gh repo create "$full" --"$visibility" --confirm
+      gh repo create "$full" --"$visibility" --confirm >/dev/null
     fi
   fi
 
@@ -243,34 +243,13 @@ main() {
       ensure_gh
       ensure_login
       full_repo="$(create_repo)"
-      owner="$(printf "%s" "$full_repo" | awk -F/ '{print $1}')"
-      repo="$(printf "%s" "$full_repo" | awk -F/ '{print $2}')"
-      pages_url="https://${owner}.github.io/${repo}/"
-      if [ -f "README.md" ] && ! grep -q "Interactive viewer:" "README.md"; then
-        tmp_readme="$(mktemp "${TMPDIR:-/tmp}/readme.XXXXXX")"
-        awk -v link="👉 Interactive viewer: ${pages_url}" '
-          BEGIN { inserted = 0 }
-          {
-            print
-            if (!inserted && $0 ~ /^#[[:space:]]+/) {
-              print ""
-              print link
-              inserted = 1
-            }
-          }
-          END {
-            if (!inserted) {
-              print ""
-              print link
-            }
-          }
-        ' README.md > "$tmp_readme"
-        mv "$tmp_readme" README.md
-      fi
       info "GitHub Actions may be disabled by default on new repos."
       info "Enable it here: https://github.com/${full_repo}/settings/actions"
       info "After GitHub Actions publishes the gh-pages branch, enable Pages here:"
       info "https://github.com/${full_repo}/settings/pages"
+      owner="$(printf "%s" "$full_repo" | awk -F/ '{print $1}')"
+      repo="$(printf "%s" "$full_repo" | awk -F/ '{print $2}')"
+      pages_url="https://${owner}.github.io/${repo}/"
       info "Interactive viewer: ${pages_url}"
       ;;
     enable-pages)
